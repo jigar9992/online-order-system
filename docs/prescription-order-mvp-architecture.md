@@ -35,23 +35,24 @@ Recommended stack:
    |-- Submission Module
    |-- Review Module
    |-- Tracking Module
-   |-- File Metadata Module
+   |-- File Module
    |
-   +--> [ Repository Ports ]
-   |       - UserRepository
-   |       - OrderRepository
-   |       - SubmissionRepository
-   |       - ReviewHistoryRepository
+   +--> [ Current Phase 1 Ports ]
+   |       - WorkflowStore
+   |       - FileStoragePort
+   |
+   +--> [ Planned Phase 2 Refinement ]
+   |       - split WorkflowStore into narrower repository ports if needed
+   |       - keep storage/file handling behind interfaces
    |
    +--> [ Storage Port ]
            - Local/mock file store in Phase 1
            - S3-compatible object storage in production
-           - PostgreSQL adapter in Phase 2
    |
    v
-[ Database ]
-  - Phase 1: Mock/In-memory
-  - Phase 2: PostgreSQL
+[ Persistence ]
+  - Phase 1: In-memory workflow state + local file storage
+  - Phase 2: PostgreSQL workflow adapter
 ```
 
 ## Current Status
@@ -61,16 +62,20 @@ Completed in the repo today:
 - workspace structure and package boundaries are in place
 - shared workflow contract package is implemented
 - backend workflow store and module wiring are implemented in-memory
+- backend auth, session cookies, and RBAC enforcement are working
+- customer multipart upload, file validation, and local file persistence are working
+- backend review queue, approve/reject actions, file serving, and tracking summary endpoints exist
 - frontend customer/admin route shell is implemented
-- lint, typecheck, test, validate, and fix commands are working
-- web and api package builds were validated individually
+- frontend upload screen is wired to the live API with local preview and submission confirmation
+- lint, typecheck, test, validate, and fix commands are available
 
 Remaining before MVP completion:
 
-- real auth and RBAC enforcement
-- file upload persistence and preview integration
 - admin review queue and decision flows wired to live API data
-- tracking page data loading and history views
+- tracking page data loading, history rendering, and resubmission UX
+- customer ownership enforcement for tracking, resubmission, and file access
+- resubmission hardening so replacement uploads persist file bytes through the storage adapter
+- workflow-focused tests for review, resubmission, tracking, and adapter behavior
 - PostgreSQL adapter and associated tests
 
 ## Detailed Tech Stack With Justification
@@ -110,7 +115,7 @@ Remaining before MVP completion:
 - Why:
   - Phase 1 stays fast and cheap for product validation
   - PostgreSQL is the best default for the first real database because the workflow is transactional and audit-friendly
-  - the same repository contracts can later support MongoDB if needed without changing business logic
+  - the same business boundary can later support different persistence implementations without changing service logic
 - File contents should not go into the database; store only file metadata and references. Use object storage or local filesystem for the actual PDF/image payloads.
 
 ### API structure
@@ -213,7 +218,7 @@ Remaining before MVP completion:
 ### File access
 
 - `GET /api/files/:fileId`
-  - gated by authorization
+  - gated by authorization and should enforce ownership/role checks server-side
   - returns secure preview/download reference
 
 ## Basic Database Schema
@@ -290,6 +295,7 @@ Remaining before MVP completion:
 - Root fix uses `corepack pnpm fix`
 - ESLint and Prettier live at the repo root with shared config under `packages/config`
 - The workspace is intentionally organized for future Turbo use, but the current root scripts use sequential Corepack pnpm recursion for stability in this Windows shell
+- `corepack pnpm test` is currently green; `corepack pnpm validate` still stops at `format:check` because of repo-wide formatting drift
 
 ## Deployment Architecture
 
@@ -311,7 +317,6 @@ Remaining before MVP completion:
 ## Future Scalability Plan
 
 - replace mock repository with PostgreSQL adapter without changing domain services
-- optionally add a MongoDB adapter later if product requirements shift
 - move file storage to S3-compatible storage if not already there
 - add notifications as an event consumer, not inside the core workflow
 - add queue-based processing only if uploads, OCR, or notifications become heavy
