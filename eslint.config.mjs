@@ -5,10 +5,9 @@ import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
 import baseIgnore from "./packages/config/eslint/base.js";
 
-const browserFiles = ["apps/web/**/*.{ts,tsx}", "apps/frontend/**/*.{ts,tsx}"];
+const browserFiles = ["apps/web/**/*.{ts,tsx}"];
 const nodeFiles = [
   "apps/api/**/*.{ts,tsx}",
-  "apps/backend/**/*.{ts,tsx}",
   "packages/**/*.{ts,tsx}",
   "packages/config/**/*.{js,mjs,cjs,ts}",
 ];

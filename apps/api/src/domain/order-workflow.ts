@@ -5,7 +5,7 @@ import {
   type OrderStatus,
   type PrescriptionSubmission,
   type SubmissionStatus,
-} from "@online-order-system/contracts";
+} from "@online-order-system/types";
 
 export type WorkflowActor = {
   actorId: string;

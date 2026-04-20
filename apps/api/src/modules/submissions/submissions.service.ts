@@ -2,7 +2,7 @@ import { Inject, Injectable } from "@nestjs/common";
 import type {
   CreateSubmissionRequest,
   PrescriptionSubmission,
-} from "@online-order-system/contracts";
+} from "@online-order-system/types";
 import { WORKFLOW_STORE } from "../../common/tokens.js";
 import type { WorkflowStore } from "../../ports/workflow-store.port.js";
 

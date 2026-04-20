@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Param, Post, Query } from "@nestjs/common";
-import type { ReviewDecisionRequest } from "@online-order-system/contracts";
+import type { ReviewDecisionRequest } from "@online-order-system/types";
 import { ReviewsService } from "./reviews.service.js";
 
 @Controller("admin/reviews")

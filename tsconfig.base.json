@@ -7,8 +7,6 @@
     "paths": {
       "@online-order-system/types": ["packages/types/src/index.ts"],
       "@online-order-system/types/*": ["packages/types/src/*"],
-      "@online-order-system/contracts": ["packages/contracts/src/index.ts"],
-      "@online-order-system/contracts/*": ["packages/contracts/src/*"],
       "@online-order-system/ui": ["packages/ui/src/index.ts"],
       "@online-order-system/ui/*": ["packages/ui/src/*"],
       "@online-order-system/utils": ["packages/utils/src/index.ts"],

@@ -5,7 +5,7 @@ import {
   type PrescriptionSubmission,
   type SubmissionStatus,
   type UserRole,
-} from "@online-order-system/contracts";
+} from "@online-order-system/types";
 import { randomUUID } from "node:crypto";
 import type {
   CreateSubmissionInput,

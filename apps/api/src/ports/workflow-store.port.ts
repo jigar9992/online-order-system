@@ -2,7 +2,7 @@ import type {
   FileKind,
   OrderSummary,
   PrescriptionSubmission,
-} from "@online-order-system/contracts";
+} from "@online-order-system/types";
 import type {
   OrderRecord,
   ReviewEvent,

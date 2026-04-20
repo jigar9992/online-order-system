@@ -1,5 +1,5 @@
 import { Body, Controller, Param, Post } from "@nestjs/common";
-import type { CreateSubmissionRequest } from "@online-order-system/contracts";
+import type { CreateSubmissionRequest } from "@online-order-system/types";
 import { SubmissionsService } from "./submissions.service.js";
 
 @Controller("customer/orders")
