@@ -68,3 +68,29 @@ Suggested handoff sequence:
 - add tests for domain rules, API behavior, and browser flows
 - keep the first implementation path mock-backed and replaceable
 - document any assumptions that affect workflow or persistence
+
+## Validation Expectations
+
+Every task must include validation appropriate to the changed area.
+
+Default policy:
+
+- code, config, test, persistence, frontend, backend, or shared-contract changes must run full workspace validation before handoff
+- docs-only changes must run `corepack pnpm format:check`
+- do not mark a task complete without reporting which validation commands were run
+- if any validation is skipped, call it out explicitly in the handoff with the reason
+- if a command fails because of known repo-wide drift, report that clearly and distinguish it from regressions introduced by the current task
+
+Required final validation by task type:
+
+- frontend task: `corepack pnpm lint`, `corepack pnpm typecheck`, `corepack pnpm test`, `corepack pnpm build`, `corepack pnpm format:check`
+- backend task: `corepack pnpm lint`, `corepack pnpm typecheck`, `corepack pnpm test`, `corepack pnpm build`, `corepack pnpm format:check`
+- shared contracts or cross-cutting task: `corepack pnpm lint`, `corepack pnpm typecheck`, `corepack pnpm test`, `corepack pnpm build`, `corepack pnpm format:check`
+- persistence or adapter task: `corepack pnpm lint`, `corepack pnpm typecheck`, `corepack pnpm test`, `corepack pnpm build`, `corepack pnpm format:check`
+- test-only task that changes repo code or automated tests: `corepack pnpm lint`, `corepack pnpm typecheck`, `corepack pnpm test`, `corepack pnpm build`, `corepack pnpm format:check`
+- docs-only task: `corepack pnpm format:check`
+
+Iteration guidance:
+
+- package-local commands in `apps/web` or `apps/api` may be used during iteration for faster feedback
+- final handoff validation must use the root workspace commands so all agents report results consistently
