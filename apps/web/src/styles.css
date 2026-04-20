@@ -60,6 +60,7 @@ h1 {
   display: flex;
   gap: 0.75rem;
   flex-wrap: wrap;
+  align-items: center;
 }
 
 .nav a {
@@ -72,6 +73,18 @@ h1 {
 .nav a.active {
   border-color: var(--border);
   background: rgba(255, 255, 255, 0.5);
+}
+
+.nav-button,
+.session-pill {
+  padding: 0.45rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.nav-button {
+  color: var(--text);
 }
 
 .content {
@@ -110,6 +123,12 @@ button {
   background: var(--accent);
   color: white;
   border-color: transparent;
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: wait;
+  opacity: 0.7;
 }
 
 button.secondary {
@@ -121,6 +140,11 @@ button.secondary {
 .muted,
 .preview span {
   color: var(--muted);
+}
+
+.error {
+  margin: 0;
+  color: #b42318;
 }
 
 .preview {

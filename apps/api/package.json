@@ -13,15 +13,19 @@
   },
   "devDependencies": {
     "@nestjs/cli": "*",
+    "@nestjs/testing": "*",
     "@types/node": "*",
-    "typescript": "*"
+    "@types/supertest": "*",
+    "supertest": "*",
+    "typescript": "*",
+    "vitest": "*"
   },
   "scripts": {
     "build": "nest build",
     "dev": "nest start --watch",
     "lint": "eslint . --ext .ts,.tsx,.js,.mjs,.cjs",
     "lint:fix": "eslint . --ext .ts,.tsx,.js,.mjs,.cjs --fix",
-    "test": "echo \"api tests placeholder\"",
+    "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   }
 }

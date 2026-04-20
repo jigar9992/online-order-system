@@ -2,7 +2,8 @@
   "extends": "../../packages/config/tsconfig/frontend.json",
   "compilerOptions": {
     "outDir": "dist",
-    "rootDir": "../.."
+    "rootDir": "../..",
+    "types": ["vite/client", "vitest/globals"]
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx"]
+  "include": ["src/**/*.ts", "src/**/*.tsx", "vitest.config.ts"]
 }
