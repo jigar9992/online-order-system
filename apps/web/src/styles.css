@@ -147,6 +147,20 @@ button.secondary {
   color: #b42318;
 }
 
+.notice {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  margin: 0;
+}
+
+.success {
+  background: rgba(15, 118, 110, 0.08);
+  border-color: rgba(15, 118, 110, 0.24);
+}
+
 .preview {
   display: grid;
   gap: 0.35rem;
@@ -159,6 +173,29 @@ button.secondary {
 .preview.empty {
   min-height: 112px;
   place-content: center;
+}
+
+.preview-meta {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.preview-image {
+  width: min(100%, 320px);
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: white;
+}
+
+.preview-link {
+  font-weight: 600;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, max-content));
+  gap: 0.4rem 1rem;
 }
 
 .row {

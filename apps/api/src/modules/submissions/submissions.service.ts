@@ -3,27 +3,50 @@ import type {
   CreateSubmissionRequest,
   PrescriptionSubmission,
 } from "@online-order-system/types";
-import { WORKFLOW_STORE } from "../../common/tokens.js";
+import { randomUUID } from "node:crypto";
+import { FILE_STORAGE, WORKFLOW_STORE } from "../../common/tokens.js";
+import type { FileStoragePort } from "../../ports/file-storage.port.js";
 import type { WorkflowStore } from "../../ports/workflow-store.port.js";
+import {
+  validateUploadedPrescriptionFile,
+  type UploadedPrescriptionFile,
+} from "./submission-upload.js";
 
 @Injectable()
 export class SubmissionsService {
   constructor(
     @Inject(WORKFLOW_STORE) private readonly workflowStore: WorkflowStore,
+    @Inject(FILE_STORAGE) private readonly fileStorage: FileStoragePort,
   ) {}
 
   async create(
     customerId: string,
-    input: CreateSubmissionRequest,
+    file: UploadedPrescriptionFile | undefined,
   ): Promise<PrescriptionSubmission> {
-    return this.workflowStore.createSubmission({
-      customerId,
-      file: {
-        fileName: input.fileName,
-        fileKind: input.fileKind,
-        fileSize: input.fileSize,
-      },
+    const upload = validateUploadedPrescriptionFile(file);
+    const fileId = randomUUID();
+
+    await this.fileStorage.save({
+      fileId,
+      fileName: upload.fileName,
+      contentType: upload.contentType,
+      body: upload.body,
     });
+
+    try {
+      return await this.workflowStore.createSubmission({
+        customerId,
+        file: {
+          fileId,
+          fileName: upload.fileName,
+          fileKind: upload.fileKind,
+          fileSize: upload.fileSize,
+        },
+      });
+    } catch (error) {
+      await this.fileStorage.delete(fileId);
+      throw error;
+    }
   }
 
   async resubmit(

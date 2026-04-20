@@ -84,7 +84,7 @@ export class InMemoryWorkflowStore implements WorkflowStore {
   ): Promise<PrescriptionSubmission> {
     const orderId = randomUUID();
     const now = new Date().toISOString();
-    const fileId = randomUUID();
+    const fileId = input.file.fileId ?? randomUUID();
 
     this.files.set(fileId, { ...input.file, fileId });
 
@@ -296,7 +296,7 @@ export class InMemoryWorkflowStore implements WorkflowStore {
     }
 
     const now = new Date().toISOString();
-    const fileId = randomUUID();
+    const fileId = input.file.fileId ?? randomUUID();
     this.files.set(fileId, { ...input.file, fileId });
 
     const submission: PrescriptionSubmission = {

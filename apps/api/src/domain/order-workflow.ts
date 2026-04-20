@@ -17,7 +17,9 @@ export type SubmissionFile = {
   fileSize: number;
 };
 
-export type SubmissionFileInput = Omit<SubmissionFile, "fileId">;
+export type SubmissionFileInput = Omit<SubmissionFile, "fileId"> & {
+  fileId?: string;
+};
 
 export type OrderRecord = {
   id: string;
