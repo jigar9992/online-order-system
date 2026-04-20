@@ -1,0 +1,59 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build output
+dist/
+build/
+coverage/
+*.tsbuildinfo
+*.map
+
+# Vite / frontend artifacts
+vite.svg
+/.vite/
+
+# NestJS / backend artifacts
+.nestjs/
+/.swc/
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+!.env.template
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Test and cache directories
+.cache/
+.eslintcache
+.parcel-cache/
+.turbo/
+.next/
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Editor settings
+.idea/
+.vscode/
+*.suo
+*.user
+*.userossc
+*.swp
+*.swo
+
+# Generated uploads or temp files
+tmp/
+temp/
+uploads/
+storage/
