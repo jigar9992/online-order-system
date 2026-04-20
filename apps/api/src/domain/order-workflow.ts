@@ -1,10 +1,8 @@
-import {
-  isOrderStatus,
-  isSubmissionStatus,
-  type FileKind,
-  type OrderStatus,
-  type PrescriptionSubmission,
-  type SubmissionStatus,
+import type {
+  FileKind,
+  OrderStatus,
+  PrescriptionSubmission,
+  SubmissionStatus,
 } from "@online-order-system/types";
 
 export type WorkflowActor = {
@@ -59,6 +57,14 @@ const allowedOrderStatusTransitions: Record<OrderStatus, OrderStatus[]> = {
   approved: ["delivered"],
   delivered: [],
 };
+
+function isSubmissionStatus(value: string): value is SubmissionStatus {
+  return ["pending", "approved", "rejected"].includes(value);
+}
+
+function isOrderStatus(value: string): value is OrderStatus {
+  return ["pending", "approved", "delivered"].includes(value);
+}
 
 export function assertSubmissionStatusTransition(
   fromStatus: SubmissionStatus,

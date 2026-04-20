@@ -1,10 +1,9 @@
-import {
-  normalizeRejectionReason,
-  type FileKind,
-  type OrderSummary,
-  type PrescriptionSubmission,
-  type SubmissionStatus,
-  type UserRole,
+import type {
+  FileKind,
+  OrderSummary,
+  PrescriptionSubmission,
+  SubmissionStatus,
+  UserRole,
 } from "@online-order-system/types";
 import { randomUUID } from "node:crypto";
 import type {
@@ -28,6 +27,11 @@ type UserRecord = {
 };
 
 type FileRecord = SubmissionFile;
+
+function normalizeRejectionReason(value: string | undefined): string | null {
+  const reason = value?.trim();
+  return reason ? reason : null;
+}
 
 export class InMemoryWorkflowStore implements WorkflowStore {
   private readonly users = new Map<string, UserRecord>();
