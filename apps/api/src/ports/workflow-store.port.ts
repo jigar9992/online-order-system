@@ -1,4 +1,5 @@
 import type {
+  AuthSession,
   FileKind,
   OrderSummary,
   PrescriptionSubmission,
@@ -23,9 +24,10 @@ export type ReviewSubmissionInput = {
 
 export interface WorkflowStore {
   seed(): void;
-  getCurrentUser(
+  authenticateUser(
     email: string,
-  ): Promise<{ id: string; email: string; role: "customer" | "admin" } | null>;
+    password: string,
+  ): Promise<AuthSession | null>;
   createSubmission(
     input: CreateSubmissionInput,
   ): Promise<PrescriptionSubmission>;

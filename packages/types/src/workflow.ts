@@ -22,6 +22,11 @@ export type AuthSession = {
   role: UserRole;
 };
 
+export type LoginRequest = {
+  email: string;
+  password: string;
+};
+
 export type PrescriptionSubmission = {
   id: string;
   orderId: string;

@@ -10,6 +10,8 @@ Provide the basic operational checks for local development and MVP validation.
   - database connection
   - file storage location or object storage endpoint
   - admin credentials or role configuration
+  - `AUTH_JWT_SECRET` for signing HttpOnly auth cookies
+  - optional `AUTH_COOKIE_SECURE=true` outside local development
 - create the required database schema or collections through the app bootstrap/migration step
 - confirm the upload directory or object-storage target is writable
 - install dependencies with `corepack pnpm install`
@@ -38,6 +40,7 @@ When `corepack pnpm dev` is running:
 - Customer tracking page: `http://localhost:5173/customer/tracking`
 - Admin review queue: `http://localhost:5173/admin/reviews`
 - API health/bootstrap check: `http://localhost:3000/api/auth/me`
+- Frontend API base URL defaults to `http://localhost:3000/api`; override with `VITE_API_BASE_URL` if needed
 
 ## 5. Getting Started
 
@@ -52,8 +55,10 @@ When `corepack pnpm dev` is running:
 1. start the backend service
 2. start the frontend application
 3. sign in as a customer
+   - phase 1 seeded user: `customer@example.com` / `password`
 4. upload a valid prescription file
 5. sign in as admin
+   - phase 1 seeded user: `admin@example.com` / `password`
 6. approve or reject the submission
 7. if rejected, resubmit a replacement file
 8. verify the tracking page shows the latest status

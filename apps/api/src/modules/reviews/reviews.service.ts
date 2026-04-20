@@ -1,5 +1,8 @@
 import { Inject, Injectable } from "@nestjs/common";
-import type { ReviewDecisionRequest } from "@online-order-system/types";
+import type {
+  AuthSession,
+  ReviewDecisionRequest,
+} from "@online-order-system/types";
 import { WORKFLOW_STORE } from "../../common/tokens.js";
 import type {
   ReviewSubmissionInput,
@@ -16,17 +19,21 @@ export class ReviewsService {
     return this.workflowStore.listPendingSubmissions();
   }
 
-  async approve(submissionId: string) {
+  async approve(submissionId: string, user: AuthSession) {
     return this.workflowStore.approveSubmission({
       submissionId,
-      actor: { actorId: "user_admin", role: "admin" },
+      actor: { actorId: user.userId, role: user.role },
     });
   }
 
-  async reject(submissionId: string, body: ReviewDecisionRequest) {
+  async reject(
+    submissionId: string,
+    user: AuthSession,
+    body: ReviewDecisionRequest,
+  ) {
     const input: ReviewSubmissionInput = {
       submissionId,
-      actor: { actorId: "user_admin", role: "admin" },
+      actor: { actorId: user.userId, role: user.role },
       ...(body.reason ? { reason: body.reason } : {}),
     };
 

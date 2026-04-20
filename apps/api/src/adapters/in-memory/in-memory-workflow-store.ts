@@ -1,4 +1,5 @@
 import type {
+  AuthSession,
   FileKind,
   OrderSummary,
   PrescriptionSubmission,
@@ -66,11 +67,16 @@ export class InMemoryWorkflowStore implements WorkflowStore {
     });
   }
 
-  async getCurrentUser(
+  async authenticateUser(
     email: string,
-  ): Promise<{ id: string; email: string; role: "customer" | "admin" } | null> {
+    password: string,
+  ): Promise<AuthSession | null> {
     const user = this.users.get(email);
-    return user ? { id: user.id, email: user.email, role: user.role } : null;
+    if (!user || user.password !== password) {
+      return null;
+    }
+
+    return { userId: user.id, email: user.email, role: user.role };
   }
 
   async createSubmission(
