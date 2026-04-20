@@ -33,8 +33,12 @@ async function apiRequest<TResponse>(
   };
 
   if (body !== undefined) {
-    requestInit.headers = { "Content-Type": "application/json" };
-    requestInit.body = JSON.stringify(body);
+    if (body instanceof FormData) {
+      requestInit.body = body;
+    } else {
+      requestInit.headers = { "Content-Type": "application/json" };
+      requestInit.body = JSON.stringify(body);
+    }
   }
 
   const response = await fetch(buildApiUrl(path), requestInit);

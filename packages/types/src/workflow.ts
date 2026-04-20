@@ -8,6 +8,8 @@ export const orderStatuses = ["pending", "approved", "delivered"] as const;
 export type OrderStatus = (typeof orderStatuses)[number];
 
 export type FileKind = "image" | "pdf";
+export const maxPrescriptionUploadSizeBytes = 5 * 1024 * 1024;
+export const prescriptionUploadMaxBytes = maxPrescriptionUploadSizeBytes;
 export const supportedPrescriptionMimeTypes = [
   "image/png",
   "image/jpeg",
