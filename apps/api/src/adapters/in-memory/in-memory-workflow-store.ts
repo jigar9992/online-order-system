@@ -10,6 +10,7 @@ import { randomUUID } from "node:crypto";
 import type {
   CreateSubmissionInput,
   ReviewSubmissionInput,
+  StoredWorkflowFile,
   WorkflowStore,
 } from "../../ports/workflow-store.port.js";
 import {
@@ -27,7 +28,10 @@ type UserRecord = {
   password: string;
 };
 
-type FileRecord = SubmissionFile;
+type FileRecord = SubmissionFile & {
+  orderId: string;
+  customerId: string;
+};
 
 function normalizeRejectionReason(value: string | undefined): string | null {
   const reason = value?.trim();
@@ -86,8 +90,6 @@ export class InMemoryWorkflowStore implements WorkflowStore {
     const now = new Date().toISOString();
     const fileId = input.file.fileId ?? randomUUID();
 
-    this.files.set(fileId, { ...input.file, fileId });
-
     const order: OrderRecord = {
       id: orderId,
       customerId: input.customerId,
@@ -109,6 +111,13 @@ export class InMemoryWorkflowStore implements WorkflowStore {
       createdAt: now,
       reviewedAt: null,
     };
+
+    this.files.set(fileId, {
+      ...input.file,
+      fileId,
+      orderId,
+      customerId: input.customerId,
+    });
 
     order.latestSubmissionId = submission.id;
     this.orders.set(orderId, order);
@@ -171,16 +180,13 @@ export class InMemoryWorkflowStore implements WorkflowStore {
     };
   }
 
-  async getFileById(fileId: string): Promise<{
-    id: string;
-    fileName: string;
-    fileKind: FileKind;
-    fileSize: number;
-  } | null> {
+  async getFileById(fileId: string): Promise<StoredWorkflowFile | null> {
     const file = this.files.get(fileId);
     return file
       ? {
           id: file.fileId,
+          orderId: file.orderId,
+          customerId: file.customerId,
           fileName: file.fileName,
           fileKind: file.fileKind,
           fileSize: file.fileSize,
@@ -297,7 +303,12 @@ export class InMemoryWorkflowStore implements WorkflowStore {
 
     const now = new Date().toISOString();
     const fileId = input.file.fileId ?? randomUUID();
-    this.files.set(fileId, { ...input.file, fileId });
+    this.files.set(fileId, {
+      ...input.file,
+      fileId,
+      orderId: order.id,
+      customerId: input.customerId,
+    });
 
     const submission: PrescriptionSubmission = {
       id: randomUUID(),

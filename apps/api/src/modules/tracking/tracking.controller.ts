@@ -1,6 +1,7 @@
 import { Controller, Get, Param, UseGuards } from "@nestjs/common";
 import { TrackingService } from "./tracking.service.js";
 import { AuthGuard } from "../auth/auth.guard.js";
+import { CurrentUser } from "../auth/current-user.decorator.js";
 import { Roles } from "../auth/roles.decorator.js";
 import { RoleGuard } from "../auth/role.guard.js";
 
@@ -11,7 +12,10 @@ export class TrackingController {
   constructor(private readonly trackingService: TrackingService) {}
 
   @Get(":orderId")
-  async getOrder(@Param("orderId") orderId: string) {
-    return this.trackingService.getOrder(orderId);
+  async getOrder(
+    @CurrentUser() user: { userId: string },
+    @Param("orderId") orderId: string,
+  ) {
+    return this.trackingService.getOrder(orderId, user.userId);
   }
 }

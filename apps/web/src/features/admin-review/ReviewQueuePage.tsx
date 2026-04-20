@@ -1,31 +1,120 @@
+import { useEffect, useState } from "react";
+import type { PrescriptionSubmission } from "@online-order-system/types";
 import { Link } from "react-router-dom";
-
-const pendingReviews = [
-  { id: "sub_001", customer: "customer@example.com", status: "pending" },
-  { id: "sub_002", customer: "customer@example.com", status: "pending" },
-];
+import { ApiError, apiGet } from "../../lib/api/client.js";
 
 export function ReviewQueuePage() {
+  const [filterValue, setFilterValue] = useState("");
+  const [pendingReviews, setPendingReviews] = useState<
+    PrescriptionSubmission[]
+  >([]);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let isActive = true;
+
+    async function loadPendingReviews() {
+      setIsLoading(true);
+      setErrorMessage(null);
+
+      try {
+        const submissions = await apiGet<PrescriptionSubmission[]>(
+          "/admin/reviews?status=pending",
+        );
+        if (!isActive) {
+          return;
+        }
+
+        setPendingReviews(submissions);
+      } catch (error) {
+        if (!isActive) {
+          return;
+        }
+
+        if (error instanceof ApiError) {
+          setErrorMessage(error.message);
+        } else {
+          setErrorMessage("Failed to load the review queue.");
+        }
+      } finally {
+        if (isActive) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    void loadPendingReviews();
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  const normalizedFilter = filterValue.trim().toLowerCase();
+  const filteredReviews = pendingReviews.filter((item) => {
+    if (!normalizedFilter) {
+      return true;
+    }
+
+    return [
+      item.id,
+      item.orderId,
+      item.customerId,
+      item.fileName,
+      item.status,
+    ].some((value) => value.toLowerCase().includes(normalizedFilter));
+  });
+
   return (
     <section className="card">
       <p className="eyebrow">Admin</p>
       <h1>Review queue</h1>
       <p className="muted">
-        This route will later call the backend review endpoints and render file
-        previews.
+        Review pending submissions, filter the queue, and open a submission for
+        decisioning.
       </p>
       <div className="stack">
-        {pendingReviews.map((item) => (
+        <label className="field">
+          <span>Filter queue</span>
+          <input
+            type="text"
+            placeholder="Search by submission, order, customer, or file"
+            value={filterValue}
+            onChange={(event) => {
+              setFilterValue(event.target.value);
+            }}
+          />
+        </label>
+        {errorMessage ? (
+          <p className="error" role="alert">
+            {errorMessage}
+          </p>
+        ) : null}
+        {isLoading ? <p className="muted">Loading pending reviews...</p> : null}
+        {!isLoading && !errorMessage && filteredReviews.length === 0 ? (
+          <article className="preview empty-state">
+            <strong>No pending reviews match the current filter.</strong>
+            <span>
+              New submissions will appear here when they are awaiting review.
+            </span>
+          </article>
+        ) : null}
+        {filteredReviews.map((item) => (
           <article className="preview" key={item.id}>
             <strong>{item.id}</strong>
-            <span>{item.customer}</span>
-            <span>{item.status}</span>
-            <Link to={`/admin/reviews/${item.id}`}>Open detail</Link>
+            <div className="detail-grid">
+              <span>Order</span>
+              <span>{item.orderId}</span>
+              <span>Customer</span>
+              <span>{item.customerId}</span>
+              <span>File</span>
+              <span>{item.fileName}</span>
+              <span>Status</span>
+              <span>{item.status}</span>
+            </div>
             <div className="row">
-              <button type="button">Approve</button>
-              <button type="button" className="secondary">
-                Reject
-              </button>
+              <Link to={`/admin/reviews/${item.id}`}>Open detail</Link>
             </div>
           </article>
         ))}

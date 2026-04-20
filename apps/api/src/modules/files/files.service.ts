@@ -1,4 +1,5 @@
 import { Inject, Injectable, NotFoundException } from "@nestjs/common";
+import type { AuthSession } from "@online-order-system/types";
 import { FILE_STORAGE, WORKFLOW_STORE } from "../../common/tokens.js";
 import type { FileStoragePort } from "../../ports/file-storage.port.js";
 import type { WorkflowStore } from "../../ports/workflow-store.port.js";
@@ -14,9 +15,13 @@ export class FilesService {
     return this.workflowStore.listFiles();
   }
 
-  async getFile(fileId: string) {
+  async getFile(fileId: string, user: AuthSession) {
     const metadata = await this.workflowStore.getFileById(fileId);
     if (!metadata) {
+      throw new NotFoundException("File not found");
+    }
+
+    if (user.role === "customer" && metadata.customerId !== user.userId) {
       throw new NotFoundException("File not found");
     }
 

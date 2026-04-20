@@ -1,4 +1,9 @@
-import { Inject, Injectable } from "@nestjs/common";
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import type {
   AuthSession,
   ReviewDecisionRequest,
@@ -20,6 +25,15 @@ export class ReviewsService {
   }
 
   async approve(submissionId: string, user: AuthSession) {
+    const submission = await this.workflowStore.getSubmissionById(submissionId);
+    if (!submission) {
+      throw new NotFoundException("Submission not found");
+    }
+
+    if (submission.status !== "pending") {
+      throw new BadRequestException("Only pending submissions can be approved");
+    }
+
     return this.workflowStore.approveSubmission({
       submissionId,
       actor: { actorId: user.userId, role: user.role },
@@ -31,10 +45,23 @@ export class ReviewsService {
     user: AuthSession,
     body: ReviewDecisionRequest,
   ) {
+    const submission = await this.workflowStore.getSubmissionById(submissionId);
+    if (!submission) {
+      throw new NotFoundException("Submission not found");
+    }
+
+    if (submission.status !== "pending") {
+      throw new BadRequestException("Only pending submissions can be rejected");
+    }
+
+    if (!body.reason?.trim()) {
+      throw new BadRequestException("Rejection reason is required");
+    }
+
     const input: ReviewSubmissionInput = {
       submissionId,
       actor: { actorId: user.userId, role: user.role },
-      ...(body.reason ? { reason: body.reason } : {}),
+      reason: body.reason,
     };
 
     return this.workflowStore.rejectSubmission(input);

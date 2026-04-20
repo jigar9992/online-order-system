@@ -1,8 +1,10 @@
-import { Inject, Injectable } from "@nestjs/common";
-import type {
-  CreateSubmissionRequest,
-  PrescriptionSubmission,
-} from "@online-order-system/types";
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
+import type { PrescriptionSubmission } from "@online-order-system/types";
 import { randomUUID } from "node:crypto";
 import { FILE_STORAGE, WORKFLOW_STORE } from "../../common/tokens.js";
 import type { FileStoragePort } from "../../ports/file-storage.port.js";
@@ -52,20 +54,55 @@ export class SubmissionsService {
   async resubmit(
     customerId: string,
     orderId: string,
-    input: CreateSubmissionRequest,
+    file: UploadedPrescriptionFile | undefined,
   ): Promise<PrescriptionSubmission> {
-    return this.workflowStore.resubmitOrder({
-      customerId,
-      orderId,
-      file: {
-        fileName: input.fileName,
-        fileKind: input.fileKind,
-        fileSize: input.fileSize,
-      },
+    const order = await this.workflowStore.getOrderById(orderId);
+    if (!order || order.customerId !== customerId) {
+      throw new NotFoundException("Order not found");
+    }
+
+    const latestSubmission = order.latestSubmissionId
+      ? await this.workflowStore.getSubmissionById(order.latestSubmissionId)
+      : null;
+    if (!latestSubmission || latestSubmission.status !== "rejected") {
+      throw new BadRequestException(
+        "Resubmission is allowed only after rejection",
+      );
+    }
+
+    const upload = validateUploadedPrescriptionFile(file);
+    const fileId = randomUUID();
+
+    await this.fileStorage.save({
+      fileId,
+      fileName: upload.fileName,
+      contentType: upload.contentType,
+      body: upload.body,
     });
+
+    try {
+      return await this.workflowStore.resubmitOrder({
+        customerId,
+        orderId,
+        file: {
+          fileId,
+          fileName: upload.fileName,
+          fileKind: upload.fileKind,
+          fileSize: upload.fileSize,
+        },
+      });
+    } catch (error) {
+      await this.fileStorage.delete(fileId);
+      throw error;
+    }
   }
 
   async getById(submissionId: string) {
-    return this.workflowStore.getSubmissionById(submissionId);
+    const submission = await this.workflowStore.getSubmissionById(submissionId);
+    if (!submission) {
+      throw new NotFoundException("Submission not found");
+    }
+
+    return submission;
   }
 }

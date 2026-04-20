@@ -16,6 +16,15 @@ export type CreateSubmissionInput = {
   file: SubmissionFileInput;
 };
 
+export type StoredWorkflowFile = {
+  id: string;
+  orderId: string;
+  customerId: string;
+  fileName: string;
+  fileKind: FileKind;
+  fileSize: number;
+};
+
 export type ReviewSubmissionInput = {
   submissionId: string;
   actor: WorkflowActor;
@@ -37,12 +46,7 @@ export interface WorkflowStore {
   ): Promise<PrescriptionSubmission | null>;
   getOrderById(orderId: string): Promise<OrderRecord | null>;
   getOrderSummary(orderId: string): Promise<OrderSummary | null>;
-  getFileById(fileId: string): Promise<{
-    id: string;
-    fileName: string;
-    fileKind: FileKind;
-    fileSize: number;
-  } | null>;
+  getFileById(fileId: string): Promise<StoredWorkflowFile | null>;
   approveSubmission(input: ReviewSubmissionInput): Promise<{
     submission: PrescriptionSubmission;
     order: OrderRecord;

@@ -21,6 +21,7 @@ vi.mock("../lib/api/client.js", () => ({
       super(message);
     }
   },
+  buildApiUrl: (path: string) => `http://localhost:3000/api${path}`,
   apiGet: (...args: unknown[]) => apiGetMock(...args),
   apiPost: (...args: unknown[]) => apiPostMock(...args),
 }));
@@ -88,11 +89,21 @@ describe("auth app shell", () => {
   });
 
   it("shows only admin navigation for an authenticated admin", async () => {
-    apiGetMock.mockResolvedValue({
-      userId: "user_admin",
-      email: "admin@example.com",
-      role: "admin",
-    } satisfies AuthSession);
+    apiGetMock.mockImplementation((path: string) => {
+      if (path === "/auth/me") {
+        return Promise.resolve({
+          userId: "user_admin",
+          email: "admin@example.com",
+          role: "admin",
+        } satisfies AuthSession);
+      }
+
+      if (path === "/admin/reviews?status=pending") {
+        return Promise.resolve([]);
+      }
+
+      return Promise.reject(new ApiError(404, "Not found"));
+    });
 
     renderApp("/admin/reviews");
 

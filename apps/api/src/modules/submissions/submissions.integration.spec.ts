@@ -30,6 +30,8 @@ describe("multipart prescription submissions", () => {
   let fileStorage: FileStoragePort;
 
   beforeEach(async () => {
+    process.env.PRESCRIPTION_FILE_STORAGE_DIR = "storage/test-submissions";
+
     const testingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
@@ -46,6 +48,7 @@ describe("multipart prescription submissions", () => {
   afterEach(async () => {
     await fileStorage.reset();
     await app.close();
+    delete process.env.PRESCRIPTION_FILE_STORAGE_DIR;
   });
 
   it("creates a pending submission for an authenticated customer and stores the file", async () => {

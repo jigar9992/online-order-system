@@ -13,7 +13,7 @@ export class ApiError extends Error {
   }
 }
 
-function buildApiUrl(path: string): string {
+export function buildApiUrl(path: string): string {
   if (/^https?:\/\//.test(path)) {
     return path;
   }

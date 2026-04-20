@@ -112,11 +112,17 @@ h1 {
 }
 
 input,
+textarea,
 button {
   font: inherit;
   border-radius: 14px;
   border: 1px solid var(--border);
   padding: 0.85rem 1rem;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 120px;
 }
 
 button {
@@ -202,6 +208,22 @@ button.secondary {
   display: flex;
   gap: 0.75rem;
   flex-wrap: wrap;
+}
+
+.history-list {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.history-list li {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.empty-state {
+  min-height: 0;
 }
 
 .eyebrow {
