@@ -11,42 +11,61 @@ The plan assumes:
 - REST APIs, JWT auth, and role-based access are in scope
 - payments, delivery integration, OCR, and notifications remain out of scope
 
+## Current Status
+
+### Completed
+
+- workspace scaffold for `apps/web`, `apps/api`, `packages/types`, `packages/ui`, `packages/utils`, and `packages/config`
+- shared lint, format, typecheck, validate, and fix commands
+- backend domain/service shell for auth, submissions, reviews, tracking, and files
+- frontend route shell for customer and admin flows
+- shared workflow types and helpers
+
+### Remaining
+
+- real customer/admin authentication and authorization
+- file upload and preview integration with the API
+- API-backed customer tracking and admin queue screens
+- persistence adapter for PostgreSQL
+- automated integration and browser coverage
+- final cleanup of any placeholder test scripts once real tests are added
+
 ## Story Map
 
 ### Frontend Stories
 
-| ID | Story | Acceptance Criteria | Points | Depends On | Parallel |
-| --- | --- | --- | ---: | --- | --- |
-| FE-1 | App shell and routing | Protected routes, role-aware navigation, auth bootstrap, shared layout are in place. | 3 | None | Yes |
-| FE-2 | Customer login | Customer can log in, session state is handled, and invalid credentials show errors. | 3 | FE-1, BE-2 | Yes |
-| FE-3 | Prescription upload with preview | Customer can choose an image/PDF, preview it, see validation messages, and submit it. | 5 | FE-1, BE-3, BE-7 | Yes |
-| FE-4 | Submission confirmation and tracking view | Customer sees the reference ID, current order status, and latest review history. | 3 | FE-1, BE-6 | Yes |
-| FE-5 | Admin review queue | Admin can see pending submissions, apply basic filtering, and open submission detail. | 5 | FE-1, BE-4 | Yes |
-| FE-6 | Admin decision actions | Admin can approve or reject a submission and enter a rejection reason when rejecting. | 5 | FE-5, BE-4 | Yes |
-| FE-7 | Resubmission flow | Customer can resubmit after rejection and keep the previous history visible. | 5 | FE-4, BE-5 | Yes |
+| ID   | Story                                     | Acceptance Criteria                                                                   | Points | Depends On       | Parallel |
+| ---- | ----------------------------------------- | ------------------------------------------------------------------------------------- | -----: | ---------------- | -------- |
+| FE-1 | App shell and routing                     | Protected routes, role-aware navigation, auth bootstrap, shared layout are in place.  |      3 | None             | Yes      |
+| FE-2 | Customer login                            | Customer can log in, session state is handled, and invalid credentials show errors.   |      3 | FE-1, BE-2       | Yes      |
+| FE-3 | Prescription upload with preview          | Customer can choose an image/PDF, preview it, see validation messages, and submit it. |      5 | FE-1, BE-3, BE-7 | Yes      |
+| FE-4 | Submission confirmation and tracking view | Customer sees the reference ID, current order status, and latest review history.      |      3 | FE-1, BE-6       | Yes      |
+| FE-5 | Admin review queue                        | Admin can see pending submissions, apply basic filtering, and open submission detail. |      5 | FE-1, BE-4       | Yes      |
+| FE-6 | Admin decision actions                    | Admin can approve or reject a submission and enter a rejection reason when rejecting. |      5 | FE-5, BE-4       | Yes      |
+| FE-7 | Resubmission flow                         | Customer can resubmit after rejection and keep the previous history visible.          |      5 | FE-4, BE-5       | Yes      |
 
 ### Backend Stories
 
-| ID | Story | Acceptance Criteria | Points | Depends On | Parallel |
-| --- | --- | --- | ---: | --- | --- |
-| BE-1 | Domain model and repository ports | Entities, workflow states, repository interfaces, and transition rules are defined. | 5 | None | Yes |
-| BE-2 | Authentication and RBAC | Login/session flow, customer/admin guards, and current-user context work end to end. | 5 | BE-1 | Yes |
-| BE-3 | Submission create and file validation | Multipart upload works, file type/size validation is enforced, and pending submissions are created. | 8 | BE-1, BE-2, BE-7 | Yes |
-| BE-4 | Review workflow | Pending reviews can be listed, approved, or rejected, and rejection reason is required. | 5 | BE-1, BE-2 | Yes |
-| BE-5 | Resubmission workflow | Resubmission is allowed only after rejection and creates a new cycle under the same order. | 5 | BE-4 | Yes |
-| BE-6 | Tracking and history read model | Current status, latest outcome, and review/status history can be fetched. | 5 | BE-1 | Yes |
-| BE-7 | File storage adapter | Mock/local storage works in Phase 1 and the storage interface is ready for future object storage. | 5 | BE-1 | Yes |
-| BE-8 | Persistence adapter for Phase 2 | PostgreSQL mappings exist for users, orders, submissions, and history. | 8 | BE-1, BE-6, BE-7 | No, later phase |
+| ID   | Story                                 | Acceptance Criteria                                                                                 | Points | Depends On       | Parallel        |
+| ---- | ------------------------------------- | --------------------------------------------------------------------------------------------------- | -----: | ---------------- | --------------- |
+| BE-1 | Domain model and repository ports     | Entities, workflow states, repository interfaces, and transition rules are defined.                 |      5 | None             | Yes             |
+| BE-2 | Authentication and RBAC               | Login/session flow, customer/admin guards, and current-user context work end to end.                |      5 | BE-1             | Yes             |
+| BE-3 | Submission create and file validation | Multipart upload works, file type/size validation is enforced, and pending submissions are created. |      8 | BE-1, BE-2, BE-7 | Yes             |
+| BE-4 | Review workflow                       | Pending reviews can be listed, approved, or rejected, and rejection reason is required.             |      5 | BE-1, BE-2       | Yes             |
+| BE-5 | Resubmission workflow                 | Resubmission is allowed only after rejection and creates a new cycle under the same order.          |      5 | BE-4             | Yes             |
+| BE-6 | Tracking and history read model       | Current status, latest outcome, and review/status history can be fetched.                           |      5 | BE-1             | Yes             |
+| BE-7 | File storage adapter                  | Mock/local storage works in Phase 1 and the storage interface is ready for future object storage.   |      5 | BE-1             | Yes             |
+| BE-8 | Persistence adapter for Phase 2       | PostgreSQL mappings exist for users, orders, submissions, and history.                              |      8 | BE-1, BE-6, BE-7 | No, later phase |
 
 ### Cross-Cutting Testing Stories
 
-| ID | Story | Acceptance Criteria | Points | Depends On | Parallel |
-| --- | --- | --- | ---: | --- | --- |
-| QA-1 | Unit tests for domain/workflow rules | Tests cover valid transitions, invalid transitions, rejection reason rules, and resubmission logic. | 5 | BE-1 | Yes |
-| QA-2 | API integration tests | API tests cover upload, review, resubmission, and tracking endpoints with workflow enforcement. | 5 | BE-2, BE-3, BE-4, BE-5, BE-6 | Yes |
-| QA-3 | Playwright customer journey | E2E coverage exists for login, upload, confirmation, tracking, and resubmission after rejection. | 5 | FE-2, FE-3, FE-4, FE-7, BE-2, BE-3, BE-5, BE-6 | Yes |
-| QA-4 | Playwright admin journey | E2E coverage exists for admin login, review queue, preview, approve, and reject with reason. | 5 | FE-5, FE-6, BE-2, BE-4 | Yes |
-| QA-5 | Contract and adapter tests | Adapter and contract tests verify that mock and real persistence behave consistently. | 3 | BE-1, BE-7, BE-8 | Later phase |
+| ID   | Story                                | Acceptance Criteria                                                                                 | Points | Depends On                                     | Parallel    |
+| ---- | ------------------------------------ | --------------------------------------------------------------------------------------------------- | -----: | ---------------------------------------------- | ----------- |
+| QA-1 | Unit tests for domain/workflow rules | Tests cover valid transitions, invalid transitions, rejection reason rules, and resubmission logic. |      5 | BE-1                                           | Yes         |
+| QA-2 | API integration tests                | API tests cover upload, review, resubmission, and tracking endpoints with workflow enforcement.     |      5 | BE-2, BE-3, BE-4, BE-5, BE-6                   | Yes         |
+| QA-3 | Playwright customer journey          | E2E coverage exists for login, upload, confirmation, tracking, and resubmission after rejection.    |      5 | FE-2, FE-3, FE-4, FE-7, BE-2, BE-3, BE-5, BE-6 | Yes         |
+| QA-4 | Playwright admin journey             | E2E coverage exists for admin login, review queue, preview, approve, and reject with reason.        |      5 | FE-5, FE-6, BE-2, BE-4                         | Yes         |
+| QA-5 | Contract and adapter tests           | Adapter and contract tests verify that mock and real persistence behave consistently.               |      3 | BE-1, BE-7, BE-8                               | Later phase |
 
 ## Parallel Work Plan
 
@@ -100,12 +119,12 @@ The plan assumes:
 
 ## Effort Summary
 
-| Area | Stories | Total Points |
-| --- | --- | ---: |
-| Frontend | FE-1 to FE-7 | 29 |
-| Backend | BE-1 to BE-8 | 46 |
-| Testing | QA-1 to QA-5 | 23 |
-| Total Phase 1 Planning Scope |  | 98 |
+| Area                         | Stories      | Total Points |
+| ---------------------------- | ------------ | -----------: |
+| Frontend                     | FE-1 to FE-7 |           29 |
+| Backend                      | BE-1 to BE-8 |           46 |
+| Testing                      | QA-1 to QA-5 |           23 |
+| Total Phase 1 Planning Scope |              |           98 |
 
 ## Notes
 

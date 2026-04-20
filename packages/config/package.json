@@ -1,0 +1,15 @@
+{
+  "name": "@online-order-system/config",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "build": "echo \"shared config package\"",
+    "lint": "eslint . --ext .ts,.tsx,.js,.mjs,.cjs",
+    "lint:fix": "eslint . --ext .ts,.tsx,.js,.mjs,.cjs --fix",
+    "test": "echo \"config tests placeholder\"",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  }
+}

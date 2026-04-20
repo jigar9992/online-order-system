@@ -1,0 +1,20 @@
+{
+  "extends": "./packages/config/tsconfig/base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "ignoreDeprecations": "6.0",
+    "lib": ["ES2022", "DOM"],
+    "paths": {
+      "@online-order-system/types": ["packages/types/src/index.ts"],
+      "@online-order-system/types/*": ["packages/types/src/*"],
+      "@online-order-system/contracts": ["packages/contracts/src/index.ts"],
+      "@online-order-system/contracts/*": ["packages/contracts/src/*"],
+      "@online-order-system/ui": ["packages/ui/src/index.ts"],
+      "@online-order-system/ui/*": ["packages/ui/src/*"],
+      "@online-order-system/utils": ["packages/utils/src/index.ts"],
+      "@online-order-system/utils/*": ["packages/utils/src/*"],
+      "@online-order-system/config": ["packages/config/src/index.ts"],
+      "@online-order-system/config/*": ["packages/config/src/*"]
+    }
+  }
+}

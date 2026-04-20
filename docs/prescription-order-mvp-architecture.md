@@ -1,17 +1,25 @@
 # Prescription Order MVP Architecture
 
 ## Summary
+
 Build a production-ready MVP as a **modular monolith** with a clearly separated **frontend**, **backend API**, **file storage**, and **persistence adapter layer**. The core rule is that business workflow lives in the backend domain/service layer, while storage and database choices remain replaceable.
 
 Recommended stack:
-- **Frontend:** React + Vite + TypeScript
-- **Backend:** NestJS + TypeScript
+
+- **Workspace:** pnpm + Turborepo scaffold, with workspace commands now using Corepack-backed pnpm recursion in this environment
+- **Frontend:** React + Vite + TypeScript in `apps/web`
+- **Backend:** NestJS + TypeScript in `apps/api`
+- **Shared types:** `packages/types`
+- **Shared UI:** `packages/ui` reserved for future shared components
+- **Shared utilities:** `packages/utils` reserved for common helpers
+- **Shared config:** `packages/config`
 - **Phase 1 persistence:** in-memory/mock repositories
 - **Phase 2 persistence:** PostgreSQL with the same repository contracts
 - **API style:** REST
 - **Auth:** JWT-based auth with HttpOnly cookies and role-based access control
 
 ## High-Level Architecture
+
 ```text
 [ Browser ]
    |
@@ -42,12 +50,33 @@ Recommended stack:
    |
    v
 [ Database ]
-   - Phase 1: Mock/In-memory
-   - Phase 2: PostgreSQL
+  - Phase 1: Mock/In-memory
+  - Phase 2: PostgreSQL
 ```
 
+## Current Status
+
+Completed in the repo today:
+
+- workspace structure and package boundaries are in place
+- shared workflow contract package is implemented
+- backend workflow store and module wiring are implemented in-memory
+- frontend customer/admin route shell is implemented
+- lint, typecheck, test, validate, and fix commands are working
+- web and api package builds were validated individually
+
+Remaining before MVP completion:
+
+- real auth and RBAC enforcement
+- file upload persistence and preview integration
+- admin review queue and decision flows wired to live API data
+- tracking page data loading and history views
+- PostgreSQL adapter and associated tests
+
 ## Detailed Tech Stack With Justification
+
 ### Frontend framework
+
 - **React + Vite + TypeScript**
 - Why this choice:
   - fastest path for a clean MVP
@@ -61,6 +90,7 @@ Recommended stack:
   - a lightweight UI kit or custom design system for rapid delivery
 
 ### Backend framework
+
 - **NestJS + TypeScript**
 - Why this choice:
   - naturally supports a modular monolith
@@ -74,6 +104,7 @@ Recommended stack:
   - guards/interceptors for auth and logging
 
 ### Database choice
+
 - **Phase 1:** mock/in-memory repository layer
 - **Phase 2:** PostgreSQL
 - Why:
@@ -83,6 +114,7 @@ Recommended stack:
 - File contents should not go into the database; store only file metadata and references. Use object storage or local filesystem for the actual PDF/image payloads.
 
 ### API structure
+
 - **REST**
 - Why:
   - simplest for MVP
@@ -91,6 +123,7 @@ Recommended stack:
   - no need for GraphQL complexity here
 
 ### Auth mechanism
+
 - **JWT access token in HttpOnly cookie**
 - Add **role-based authorization** for `customer` and `admin`
 - Why:
@@ -100,7 +133,9 @@ Recommended stack:
   - fits the current requirement for authenticated customers and internal admin users
 
 ## Component Breakdown
+
 ### Frontend
+
 - Customer login screen
 - Prescription upload screen with file preview
 - Submission confirmation screen with reference ID
@@ -112,6 +147,7 @@ Recommended stack:
 - Admin review history view
 
 ### Backend modules
+
 - **Auth Module**
   - login
   - current user context
@@ -137,6 +173,7 @@ Recommended stack:
   - traceability across resubmissions
 
 ### Domain rules to enforce server-side
+
 - only authenticated customers can submit and track
 - only admins can review submissions
 - only `pending` submissions can be approved or rejected
@@ -145,12 +182,15 @@ Recommended stack:
 - client must never be allowed to write status directly
 
 ## API Endpoint Examples
+
 ### Auth
+
 - `POST /api/auth/login`
 - `POST /api/auth/logout`
 - `GET /api/auth/me`
 
 ### Customer submission and tracking
+
 - `POST /api/customer/submissions`
   - multipart upload for image/PDF
   - creates a new submission in `pending`
@@ -161,6 +201,7 @@ Recommended stack:
   - creates a new pending submission under the same order
 
 ### Admin review
+
 - `GET /api/admin/reviews?status=pending`
   - review queue
 - `GET /api/admin/submissions/:submissionId`
@@ -170,12 +211,15 @@ Recommended stack:
   - body includes `reason`
 
 ### File access
+
 - `GET /api/files/:fileId`
   - gated by authorization
   - returns secure preview/download reference
 
 ## Basic Database Schema
+
 ### `users`
+
 - `id`
 - `email`
 - `password_hash`
@@ -184,6 +228,7 @@ Recommended stack:
 - `updated_at`
 
 ### `orders`
+
 - `id`
 - `customer_id`
 - `current_status` (`pending` | `approved` | `delivered`)
@@ -191,6 +236,7 @@ Recommended stack:
 - `updated_at`
 
 ### `prescription_submissions`
+
 - `id`
 - `order_id`
 - `uploaded_by`
@@ -204,6 +250,7 @@ Recommended stack:
 - `reviewed_at`
 
 ### `review_actions`
+
 - `id`
 - `submission_id`
 - `reviewed_by`
@@ -212,6 +259,7 @@ Recommended stack:
 - `created_at`
 
 ### `status_history`
+
 - `id`
 - `order_id`
 - `submission_id`
@@ -222,40 +270,31 @@ Recommended stack:
 - `created_at`
 
 ## Folder Structure
+
 ```text
 /apps
-  /frontend
+  /web
     /src
-      /pages
-      /components
-      /features
-      /api
-      /auth
-      /routes
-  /backend
+  /api
     /src
-      /modules
-        /auth
-        /submissions
-        /reviews
-        /tracking
-        /files
-      /domain
-      /ports
-      /adapters
-      /common
-      /config
-      /main.ts
 /packages
-  /shared
-    /types
-    /schemas
-    /constants
-/docs
+  /types
+  /ui
+  /utils
+  /config
 ```
 
+## Notes on Validation and Tooling
+
+- Root validation uses `corepack pnpm validate`
+- Root fix uses `corepack pnpm fix`
+- ESLint and Prettier live at the repo root with shared config under `packages/config`
+- The workspace is intentionally organized for future Turbo use, but the current root scripts use sequential Corepack pnpm recursion for stability in this Windows shell
+
 ## Deployment Architecture
+
 ### MVP deployment shape
+
 - **Frontend:** static hosting or CDN-backed deployment
 - **Backend:** single containerized API service
 - **Database:** PostgreSQL in phase 2
@@ -263,12 +302,14 @@ Recommended stack:
 - **Dev phase 1:** local app + mock repository + local file storage
 
 ### Operational notes
+
 - one backend deployable keeps costs low
 - frontend and backend can scale independently later
 - use environment variables for DB, auth secret, and storage credentials
 - add structured logs and request IDs from day one
 
 ## Future Scalability Plan
+
 - replace mock repository with PostgreSQL adapter without changing domain services
 - optionally add a MongoDB adapter later if product requirements shift
 - move file storage to S3-compatible storage if not already there
@@ -278,6 +319,7 @@ Recommended stack:
 - add read replicas or caching only after observing performance bottlenecks
 
 ## Assumptions
+
 - The product is a web app, not mobile-first native.
 - The first real database should be **PostgreSQL**, with the app still keeping a database-agnostic repository layer.
 - Phase 1 is intentionally mock-backed so the workflow can be built and validated before committing to a persistent database.

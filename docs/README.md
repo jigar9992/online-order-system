@@ -2,13 +2,39 @@
 
 This folder contains the MVP documentation pack for the prescription upload and approval workflow.
 
+## Current Status
+
+The monorepo scaffold is in place and validated:
+
+- `apps/web` contains the React + Vite customer/admin UI shell
+- `apps/api` contains the NestJS API shell and workflow modules
+- `packages/types` contains shared DTOs, enums, and workflow helpers
+- `packages/ui` and `packages/utils` are reserved for shared code
+- `packages/config` contains shared TypeScript, ESLint, and Prettier config
+
+Validation commands currently work:
+
+- `corepack pnpm lint`
+- `corepack pnpm typecheck`
+- `corepack pnpm test`
+- `corepack pnpm format:check`
+- `corepack pnpm validate`
+- `corepack pnpm fix`
+
+Local dev endpoints:
+
+- Web app: `http://localhost:5173`
+- API: `http://localhost:3000`
+- Main customer upload route: `http://localhost:5173/customer/upload`
+- Admin review route: `http://localhost:5173/admin/reviews`
+
 ## Documents
 
 - [requirements-spec.md](requirements-spec.md): source of truth for business requirements, workflow, and acceptance criteria
-- [architecture-notes.md](architecture-notes.md): implementation guidance for frontend, backend, persistence, and file handling
-- [prescription-order-mvp-architecture.md](prescription-order-mvp-architecture.md): target architecture summary and implementation assumptions
-- [prescription-order-mvp-stories.md](prescription-order-mvp-stories.md): story map with estimates, dependencies, and parallel work plan
-- [runbook.md](runbook.md): local setup and operational checks for development and validation
+- [architecture-notes.md](architecture-notes.md): implementation guidance for the workspace layout, backend workflow, and shared contracts
+- [prescription-order-mvp-architecture.md](prescription-order-mvp-architecture.md): target architecture summary, tech stack, and implementation status
+- [prescription-order-mvp-stories.md](prescription-order-mvp-stories.md): story map with estimates, dependencies, completed items, and remaining work
+- [runbook.md](runbook.md): local setup, validation commands, dev URLs, and common fix notes
 
 ## Scope
 

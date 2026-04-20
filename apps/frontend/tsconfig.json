@@ -1,0 +1,9 @@
+{
+  "extends": "../../packages/config/tsconfig/frontend.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src"
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx", "vite.config.ts"],
+  "exclude": ["dist", "node_modules"]
+}

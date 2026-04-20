@@ -4,7 +4,20 @@
 
 Design the MVP as a thin UI over a domain service layer, with persistence and file storage isolated behind interfaces so the implementation can later run on PostgreSQL or MongoDB without rewriting workflow logic.
 
-## 2. Frontend Structure
+## 2. Current Workspace Layout
+
+The repo is organized as a single pnpm workspace:
+
+- `apps/web` for the React + Vite UI
+- `apps/api` for the NestJS API
+- `packages/types` for shared DTOs, enums, and workflow helpers
+- `packages/ui` for future shared React components
+- `packages/utils` for future shared utilities
+- `packages/config` for shared TypeScript, ESLint, and Prettier presets
+
+This layout matches the current implementation and keeps frontend and backend in one repo while still separating ownership.
+
+## 3. Frontend Structure
 
 ### Customer screens
 
@@ -21,7 +34,7 @@ Design the MVP as a thin UI over a domain service layer, with persistence and fi
 - approve/reject action panel
 - review history view
 
-## 3. Backend Structure
+## 4. Backend Structure
 
 ### Recommended service boundaries
 
@@ -46,7 +59,7 @@ Design the MVP as a thin UI over a domain service layer, with persistence and fi
 - prevent direct status writes from the client
 - record each review event and status change
 
-## 4. Persistence Design
+## 5. Persistence Design
 
 ### Domain-first model
 
@@ -75,7 +88,7 @@ This lets the same application logic work with relational or document storage.
 - store file content in an object-storage-compatible layer
 - keep only references and metadata in the domain records
 
-## 5. Data Considerations
+## 6. Data Considerations
 
 ### PostgreSQL mapping
 
@@ -87,21 +100,21 @@ This lets the same application logic work with relational or document storage.
 - order and submission history can be embedded or linked by identifiers
 - repositories should hide document shape differences from services
 
-## 6. File Handling
+## 7. File Handling
 
 - accept image and PDF files only
 - validate size and MIME type before persistence
 - generate a server-side reference for each uploaded file
 - keep preview support on the frontend using the selected local file and/or stored file URL
 
-## 7. Security and Controls
+## 8. Security and Controls
 
 - require authentication for customer upload and tracking
 - restrict admin routes to verified admin users
 - validate all workflow transitions server-side
 - avoid trusting client-supplied status values
 
-## 8. Suggested Implementation Order
+## 9. Suggested Implementation Order
 
 1. define domain entities and repository interfaces
 2. implement upload and preview flow
@@ -110,8 +123,29 @@ This lets the same application logic work with relational or document storage.
 5. implement tracking view and history
 6. wire storage and database adapters
 
-## 9. Notes for Future Expansion
+## 10. Notes for Future Expansion
 
 - payments can be added as a separate order lifecycle step
 - delivery integration can consume approved orders later
 - notifications can be attached to status-change events without changing the core model
+
+## 11. Completed and Remaining
+
+### Completed
+
+- workspace scaffold for `web`, `api`, `types`, `ui`, `utils`, and `config`
+- shared TypeScript, ESLint, and Prettier configuration
+- shared type package for workflow contracts
+- in-memory backend workflow store and service modules
+- frontend route shell for customer and admin flows
+- repository validation commands for lint, typecheck, test, and format
+
+### Remaining
+
+- real authentication with HttpOnly JWT cookies
+- backend guards and role enforcement
+- API integration with actual file upload endpoints
+- persistent storage adapter for PostgreSQL
+- shared UI package implementation
+- shared utility helpers
+- integration and E2E tests

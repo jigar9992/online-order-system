@@ -1,0 +1,7 @@
+packages:
+  - "apps/web"
+  - "apps/api"
+  - "packages/types"
+  - "packages/ui"
+  - "packages/utils"
+  - "packages/config"

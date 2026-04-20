@@ -1,0 +1,28 @@
+{
+  "name": "@online-order-system/backend",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@online-order-system/contracts": "workspace:*",
+    "@nestjs/common": "*",
+    "@nestjs/core": "*",
+    "@nestjs/platform-express": "*",
+    "reflect-metadata": "*",
+    "rxjs": "*"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "*",
+    "@types/node": "*",
+    "typescript": "*"
+  },
+  "scripts": {
+    "build": "nest build",
+    "dev": "nest start --watch",
+    "start": "node dist/main.js",
+    "lint": "eslint . --ext .ts,.tsx,.js,.mjs,.cjs",
+    "lint:fix": "eslint . --ext .ts,.tsx,.js,.mjs,.cjs --fix",
+    "test": "echo \"backend tests placeholder\"",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  }
+}

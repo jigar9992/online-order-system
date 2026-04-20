@@ -1,0 +1,28 @@
+{
+  "name": "@online-order-system/web",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@online-order-system/types": "workspace:*",
+    "react": "*",
+    "react-dom": "*",
+    "react-router-dom": "*"
+  },
+  "devDependencies": {
+    "@types/react": "*",
+    "@types/react-dom": "*",
+    "@vitejs/plugin-react": "*",
+    "typescript": "*",
+    "vite": "*"
+  },
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite",
+    "lint": "eslint . --ext .ts,.tsx,.js,.mjs,.cjs",
+    "lint:fix": "eslint . --ext .ts,.tsx,.js,.mjs,.cjs --fix",
+    "preview": "vite preview",
+    "test": "echo \"web tests placeholder\"",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  }
+}

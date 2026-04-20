@@ -1,0 +1,15 @@
+{
+  "name": "@online-order-system/contracts",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "build": "echo \"contracts are type-only in phase 1\"",
+    "lint": "eslint . --ext .ts,.tsx,.js,.mjs,.cjs",
+    "lint:fix": "eslint . --ext .ts,.tsx,.js,.mjs,.cjs --fix",
+    "test": "echo \"contracts tests placeholder\"",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  }
+}

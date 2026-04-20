@@ -1,0 +1,29 @@
+{
+  "name": "online-order-system",
+  "private": true,
+  "version": "0.0.0",
+  "packageManager": "pnpm@10.33.0+sha512.10568bb4a6afb58c9eb3630da90cc9516417abebd3fabbe6739f0ae795728da1491e9db5a544c76ad8eb7570f5c4bb3d6c637b2cb41bfdcdb47fa823c8649319",
+  "devDependencies": {
+    "@eslint/js": "*",
+    "eslint": "*",
+    "eslint-plugin-react-hooks": "*",
+    "eslint-plugin-react-refresh": "*",
+    "globals": "*",
+    "prettier": "*",
+    "turbo": "*",
+    "typescript": "*",
+    "typescript-eslint": "*"
+  },
+  "scripts": {
+    "dev": "corepack pnpm -r --parallel dev",
+    "build": "corepack pnpm -r --workspace-concurrency=1 build",
+    "test": "corepack pnpm -r --workspace-concurrency=1 test",
+    "lint": "corepack pnpm -r --workspace-concurrency=1 lint",
+    "lint:fix": "corepack pnpm -r --workspace-concurrency=1 lint:fix",
+    "format": "prettier --write . --config packages/config/prettier.config.cjs --ignore-path .prettierignore",
+    "format:check": "prettier --check . --config packages/config/prettier.config.cjs --ignore-path .prettierignore",
+    "typecheck": "corepack pnpm -r --workspace-concurrency=1 typecheck",
+    "validate": "corepack pnpm lint && corepack pnpm typecheck && corepack pnpm test && corepack pnpm format:check",
+    "fix": "corepack pnpm lint:fix && corepack pnpm format"
+  }
+}
