@@ -1,7 +1,11 @@
 {
   "extends": "../../packages/config/tsconfig/library.json",
   "compilerOptions": {
-    "outDir": "dist"
+    "outDir": "dist",
+    "rootDir": "src",
+    "declaration": true,
+    "declarationMap": true,
+    "emitDeclarationOnly": false
   },
   "include": ["src/**/*.ts"]
 }

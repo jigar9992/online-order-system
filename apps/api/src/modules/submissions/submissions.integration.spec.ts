@@ -1,5 +1,4 @@
 import { INestApplication } from "@nestjs/common";
-import { maxPrescriptionUploadSizeBytes } from "@online-order-system/types";
 import { Test } from "@nestjs/testing";
 import request from "supertest";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -7,6 +6,8 @@ import { AppModule } from "../../app.module.js";
 import { InMemoryWorkflowStore } from "../../adapters/in-memory/in-memory-workflow-store.js";
 import { FILE_STORAGE, WORKFLOW_STORE } from "../../common/tokens.js";
 import type { FileStoragePort } from "../../ports/file-storage.port.js";
+
+const maxPrescriptionUploadSizeBytes = 5 * 1024 * 1024;
 
 function binaryParser(
   response: NodeJS.ReadableStream,

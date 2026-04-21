@@ -22,7 +22,7 @@
   },
   "scripts": {
     "build": "nest build",
-    "dev": "nest start --watch",
+    "dev": "corepack pnpm --filter @online-order-system/types build && nest start --watch",
     "lint": "eslint . --ext .ts,.tsx,.js,.mjs,.cjs",
     "lint:fix": "eslint . --ext .ts,.tsx,.js,.mjs,.cjs --fix",
     "test": "vitest run",

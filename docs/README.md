@@ -23,7 +23,7 @@ The workspace is expected to validate through:
 ## Local Dev URLs
 
 - Web app: `http://localhost:5173`
-- API: `http://localhost:3000`
+- API: `http://localhost:3002`
 - Customer upload route: `http://localhost:5173/customer/upload`
 - Customer tracking route: `http://localhost:5173/customer/tracking`
 - Admin review route: `http://localhost:5173/admin/reviews`

@@ -10,6 +10,10 @@ Provide the local setup, validation, and workflow checks for the current MVP.
   - `PRESCRIPTION_FILE_STORAGE_DIR` if you want to override the default local upload directory
   - `AUTH_JWT_SECRET` for signing HttpOnly auth cookies
   - optional `AUTH_COOKIE_SECURE=true` outside local development
+  - optional `API_PORT` to override the local API port; default is `3002`
+  - optional `WEB_ORIGIN` to override allowed browser origins for direct API calls; defaults cover local Vite ports `5173`-`5175`
+  - optional `VITE_API_BASE_URL` when the frontend should call a fully qualified API URL instead of the local dev proxy
+  - optional `VITE_API_PROXY_TARGET` if the Vite dev server should proxy `/api` to a different backend URL
 - Phase 1 does not require a database connection or schema bootstrap; workflow state is stored in memory by default
 - confirm the upload directory is writable
 - install dependencies with `corepack pnpm install`
@@ -32,12 +36,12 @@ Provide the local setup, validation, and workflow checks for the current MVP.
 When `corepack pnpm dev` is running:
 
 - Web app: `http://localhost:5173`
-- API: `http://localhost:3000`
+- API: `http://localhost:3002`
 - Customer upload page: `http://localhost:5173/customer/upload`
 - Customer tracking page: `http://localhost:5173/customer/tracking`
 - Admin review queue: `http://localhost:5173/admin/reviews`
-- API auth check: `http://localhost:3000/api/auth/me`
-- Frontend API base URL defaults to `http://localhost:3000/api`; override with `VITE_API_BASE_URL` if needed
+- API auth check: `http://localhost:3002/api/auth/me`
+- Frontend API base URL defaults to same-origin `/api` in dev and is proxied to `http://localhost:3002`; override with `VITE_API_BASE_URL` if needed
 
 ## 5. Getting Started
 
@@ -106,3 +110,4 @@ When `corepack pnpm dev` is running:
 - If delivery cannot be triggered, verify the latest review outcome is `approved`.
 - If tracking shows stale data, verify the order reference and the latest workflow event persisted in the store.
 - If file preview fails after resubmission, verify the file-storage path and file-access authorization rather than the UI first.
+- If login calls return HTML or unexpected CORS errors, verify another local app is not occupying the API target port and confirm the Vite proxy is pointing to the correct backend URL.

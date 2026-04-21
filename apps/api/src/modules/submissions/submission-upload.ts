@@ -1,11 +1,19 @@
 import { BadRequestException } from "@nestjs/common";
-import {
-  isSupportedPrescriptionMimeType,
-  maxPrescriptionUploadSizeBytes,
-  type FileKind,
-  supportedPrescriptionMimeTypes,
-} from "@online-order-system/types";
+import type { FileKind } from "@online-order-system/types";
 import { basename } from "node:path";
+
+const maxPrescriptionUploadSizeBytes = 5 * 1024 * 1024;
+const supportedPrescriptionMimeTypes = [
+  "image/png",
+  "image/jpeg",
+  "application/pdf",
+] as const;
+
+function isSupportedPrescriptionMimeType(
+  value: string,
+): value is (typeof supportedPrescriptionMimeTypes)[number] {
+  return (supportedPrescriptionMimeTypes as readonly string[]).includes(value);
+}
 
 export type UploadedPrescriptionFile = {
   originalname: string;
