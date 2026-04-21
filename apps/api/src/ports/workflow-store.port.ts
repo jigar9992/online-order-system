@@ -6,8 +6,8 @@ import type {
 } from "@online-order-system/types";
 import type {
   OrderRecord,
-  ReviewEvent,
   SubmissionFileInput,
+  WorkflowEvent,
   WorkflowActor,
 } from "../domain/order-workflow.js";
 
@@ -50,12 +50,12 @@ export interface WorkflowStore {
   approveSubmission(input: ReviewSubmissionInput): Promise<{
     submission: PrescriptionSubmission;
     order: OrderRecord;
-    event: ReviewEvent;
+    event: WorkflowEvent;
   }>;
   rejectSubmission(input: ReviewSubmissionInput): Promise<{
     submission: PrescriptionSubmission;
     order: OrderRecord;
-    event: ReviewEvent;
+    event: WorkflowEvent;
   }>;
   resubmitOrder(
     input: CreateSubmissionInput & { orderId: string },

@@ -3,6 +3,8 @@ import type {
   OrderStatus,
   PrescriptionSubmission,
   SubmissionStatus,
+  WorkflowHistoryScope,
+  WorkflowHistoryStatus,
 } from "@online-order-system/types";
 
 export type WorkflowActor = {
@@ -30,10 +32,11 @@ export type OrderRecord = {
   updatedAt: string;
 };
 
-export type ReviewEvent = {
-  submissionId: string;
+export type WorkflowEvent = {
+  submissionId: string | null;
   orderId: string;
-  status: SubmissionStatus;
+  scope: WorkflowHistoryScope;
+  status: WorkflowHistoryStatus;
   actorId: string;
   reason: string | null;
   createdAt: string;
@@ -42,7 +45,7 @@ export type ReviewEvent = {
 export type WorkflowSnapshot = {
   order: OrderRecord;
   submission: PrescriptionSubmission;
-  event: ReviewEvent;
+  event: WorkflowEvent;
 };
 
 const allowedSubmissionStatusTransitions: Record<

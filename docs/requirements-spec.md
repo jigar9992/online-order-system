@@ -2,7 +2,7 @@
 
 ## 1. Purpose
 
-Define the minimum viable product for a prescription-based online order flow where a customer uploads a prescription, an admin verifies it, and the order is tracked through completion.
+Define the minimum viable product for a prescription-based online order flow where a customer uploads a prescription, an admin verifies it, the order can be manually marked delivered, and the customer can track the full workflow.
 
 This document is the source of truth for MVP scope and acceptance criteria.
 
@@ -14,11 +14,11 @@ Enable a controlled prescription approval process that reduces manual handling e
 
 ### Customer
 
-- Authenticated user who uploads a prescription and tracks the resulting order.
+- authenticated user who uploads a prescription, tracks the order, and resubmits after rejection
 
 ### Admin
 
-- Internal user who reviews prescription submissions and approves or rejects them.
+- internal user who reviews prescription submissions, approves or rejects them, and manually marks approved orders as delivered
 
 ## 4. MVP Scope
 
@@ -30,7 +30,8 @@ Enable a controlled prescription approval process that reduces manual handling e
 - admin verification and decisioning
 - rejection reason capture
 - resubmission after rejection
-- order status tracking
+- order status tracking with workflow history
+- manual delivery update after approval
 - status workflow enforcement
 - database-agnostic persistence contract
 
@@ -66,11 +67,18 @@ Enable a controlled prescription approval process that reduces manual handling e
 3. System records the new file as a new submission under the same order context.
 4. Workflow returns to `pending`.
 
-### 5.4 Order Tracking
+### 5.4 Delivery Update
+
+1. Admin opens an approved order from the submission detail view.
+2. Admin marks the order as delivered.
+3. System records an order-level history event and updates the order status to `delivered`.
+
+### 5.5 Order Tracking
 
 1. Customer opens the tracking page.
 2. System shows current order status and latest review outcome.
-3. Status updates continue until the order reaches `delivered`.
+3. System shows submission events and order milestones in workflow history.
+4. Status updates continue until the order reaches `delivered`.
 
 ## 6. Status Model
 
@@ -92,7 +100,8 @@ Enable a controlled prescription approval process that reduces manual handling e
 - only admins can move a submission from `pending` to `approved` or `rejected`
 - resubmission is allowed only after rejection
 - each resubmission creates a new review cycle
-- once approved, the order can progress to `delivered`
+- once approved, only admins can move the order to `delivered`
+- order history must preserve both review events and delivery milestones
 
 ## 7. Functional Requirements
 
@@ -121,14 +130,19 @@ Enable a controlled prescription approval process that reduces manual handling e
 ### FR-5 Order tracking
 
 - The system must allow a customer to view current order status.
-- The system must show the latest decision and status history.
+- The system must show the latest review decision and workflow history.
 
-### FR-6 Status workflow
+### FR-6 Delivery progression
+
+- The system must allow only admins to mark approved orders as delivered.
+- The system must reject delivery updates for orders that are not in `approved`.
+
+### FR-7 Status workflow
 
 - The system must enforce allowed transitions.
 - The system must prevent direct transitions that bypass admin review.
 
-### FR-7 Data portability
+### FR-8 Data portability
 
 - The system must keep business logic independent of the underlying database engine.
 - The data model must be representable in both PostgreSQL and MongoDB.
@@ -136,9 +150,9 @@ Enable a controlled prescription approval process that reduces manual handling e
 ## 8. Non-Functional Requirements
 
 - The system should handle common image and PDF uploads reliably.
-- The system should preserve an audit trail of review actions.
+- The system should preserve an audit trail of review actions and delivery changes.
 - The system should be structured so a database adapter can be replaced without changing the workflow rules.
-- The system should expose clear validation and error messages for failed uploads and review actions.
+- The system should expose clear validation and error messages for failed uploads, review actions, and delivery updates.
 
 ## 9. Acceptance Criteria
 
@@ -164,13 +178,16 @@ Enable a controlled prescription approval process that reduces manual handling e
 
 ### AC-6 Tracking
 
-- Given an order, when the customer opens tracking, then the system displays the current status and latest review outcome.
+- Given an order, when the customer opens tracking, then the system displays the current status, latest review outcome, and workflow history.
 
-### AC-7 Data abstraction
+### AC-7 Delivery
+
+- Given an approved order, when an admin marks it delivered, then the system updates the order status to `delivered` and records the delivery milestone in history.
+
+### AC-8 Data abstraction
 
 - Given a different persistence adapter, when the workflow runs, then the business behavior remains the same.
 
 ## 10. Open Questions
 
-- Whether delivery updates will be manual or triggered by a future integration.
 - Whether customers can create multiple active orders in parallel in the first release.

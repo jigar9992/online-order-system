@@ -2,7 +2,7 @@
 
 ## 1. Architecture Intent
 
-Design the MVP as a thin UI over a domain service layer, with persistence and file storage isolated behind interfaces so the implementation can later run on PostgreSQL or MongoDB without rewriting workflow logic.
+Design the MVP as a thin UI over a domain service layer, with persistence and file storage isolated behind interfaces so the implementation can later run on PostgreSQL without rewriting workflow logic.
 
 ## 2. Current Workspace Layout
 
@@ -24,40 +24,42 @@ This layout matches the current implementation and keeps frontend and backend in
 - login
 - prescription upload with preview
 - submission confirmation
-- order tracking
-- rejected submission details with resubmission action
+- order tracking with mixed submission and order history
+- resubmission after rejection
 
 ### Admin screens
 
 - review queue
 - submission detail and preview
 - approve/reject action panel
-- review history view
+- in-place delivery action for approved orders
 
 ## 4. Backend Structure
 
-### Recommended service boundaries
+### Service boundaries
 
 - authentication and user context
 - prescription submission service
-- admin review service
+- admin review and delivery service
 - order tracking service
-- file upload service
+- file upload and retrieval service
 
 ### API behavior
 
 - create prescription submission
-- fetch submission and order status
+- fetch submission detail plus current order state
 - list pending admin reviews
 - approve submission
 - reject submission with reason
 - create resubmission after rejection
+- mark approved orders as delivered
+- fetch customer tracking summaries and history
 
 ### Workflow enforcement
 
 - enforce transitions in the service layer
 - prevent direct status writes from the client
-- record each review event and status change
+- record submission events and order milestones
 
 ## 5. Persistence Design
 
@@ -68,84 +70,72 @@ Keep a canonical domain model with entities for:
 - user
 - order
 - prescription submission
-- review decision
-- status history
+- workflow history
 
 ### Adapter pattern
 
-Use repository interfaces such as:
+Use replaceable interfaces for:
 
-- user repository
-- order repository
-- prescription repository
-- audit/status history repository
+- workflow state persistence
+- file storage
 
-This lets the same application logic work with relational or document storage.
+This keeps the same application logic usable with in-memory Phase 1 storage and a future PostgreSQL adapter.
 
 ### Data storage guidance
 
-- store file metadata in the primary database
+- store file metadata in workflow records
 - store file content in an object-storage-compatible layer
-- keep only references and metadata in the domain records
+- keep only references and metadata in domain records
 
 ## 6. Data Considerations
 
-### PostgreSQL mapping
+### History model
 
-- users, orders, submissions, and history can map to normalized tables
-- foreign keys can enforce relationships
+- submission review actions stay tied to a `submissionId`
+- order milestones such as `delivered` are recorded separately with `scope: "order"`
+- tracking should present both kinds of events without overloading submission status history
 
-### MongoDB mapping
+### PostgreSQL direction
 
-- order and submission history can be embedded or linked by identifiers
-- repositories should hide document shape differences from services
+- users, orders, submissions, and history map cleanly to normalized tables
+- history records should preserve event scope, actor, timestamps, and optional submission linkage
 
 ## 7. File Handling
 
 - accept image and PDF files only
 - validate size and MIME type before persistence
 - generate a server-side reference for each uploaded file
-- keep preview support on the frontend using the selected local file and/or stored file URL
+- keep preview support on the frontend using the selected local file and authorized backend file URLs
 
 ## 8. Security and Controls
 
 - require authentication for customer upload and tracking
 - restrict admin routes to verified admin users
+- enforce customer ownership for tracking, resubmission, and file access
 - validate all workflow transitions server-side
 - avoid trusting client-supplied status values
 
-## 9. Suggested Implementation Order
+## 9. Completed and Remaining
 
-1. define domain entities and repository interfaces
-2. implement upload and preview flow
-3. implement admin review workflow
-4. implement resubmission flow
-5. implement tracking view and history
-6. wire storage and database adapters
+### Completed
+
+- shared workflow contracts, including typed history events for submission and order scopes
+- real authentication with HttpOnly JWT cookies and RBAC
+- customer upload with validation, preview, confirmation, and local file persistence
+- admin review queue and submission detail with approve/reject actions
+- customer tracking with workflow history and resubmission
+- manual delivery progression from `approved` to `delivered`
+- ownership-protected tracking and file access
+- frontend and backend automated tests for the implemented workflows
+
+### Remaining
+
+- PostgreSQL persistence adapter for Phase 2
+- broader E2E/browser coverage for customer and admin journeys
+- optional future shared UI and utility package extraction
 
 ## 10. Notes for Future Expansion
 
 - payments can be added as a separate order lifecycle step
-- delivery integration can consume approved orders later
-- notifications can be attached to status-change events without changing the core model
-
-## 11. Completed and Remaining
-
-### Completed
-
-- workspace scaffold for `web`, `api`, `types`, `ui`, `utils`, and `config`
-- shared TypeScript, ESLint, and Prettier configuration
-- shared type package for workflow contracts
-- in-memory backend workflow store and service modules
-- frontend route shell for customer and admin flows
-- repository validation commands for lint, typecheck, test, and format
-
-### Remaining
-
-- real authentication with HttpOnly JWT cookies
-- backend guards and role enforcement
-- API integration with actual file upload endpoints
-- persistent storage adapter for PostgreSQL
-- shared UI package implementation
-- shared utility helpers
-- integration and E2E tests
+- delivery integration can replace the manual delivery update later
+- notifications can react to workflow events without changing the core domain model

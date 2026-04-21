@@ -74,8 +74,9 @@ describe("workflow integration", () => {
       status: "pending",
       latestDecision: "rejected",
       history: [
-        { status: "pending", reason: null },
+        { scope: "submission", status: "pending", reason: null },
         {
+          scope: "submission",
           status: "rejected",
           reason: "Please upload a clearer image.",
         },
@@ -155,6 +156,118 @@ describe("workflow integration", () => {
       .get(`/api/files/${resubmitResponse.body.fileId}`)
       .set("Cookie", otherCustomerCookie)
       .expect(404);
+  });
+
+  it("lets admins mark approved orders as delivered and exposes the order milestone only to the owner", async () => {
+    const customerCookie = await loginAs(
+      app,
+      "customer@example.com",
+      "password",
+    );
+    const otherCustomerCookie = await loginAs(
+      app,
+      "customer2@example.com",
+      "password",
+    );
+    const adminCookie = await loginAs(app, "admin@example.com", "password");
+
+    const uploadResponse = await request(app.getHttpServer())
+      .post("/api/customer/submissions")
+      .set("Cookie", customerCookie)
+      .attach("file", Buffer.from("%PDF-1.4 upload%"), {
+        filename: "rx.pdf",
+        contentType: "application/pdf",
+      })
+      .expect(201);
+
+    await request(app.getHttpServer())
+      .post(`/api/admin/reviews/${uploadResponse.body.id}/approve`)
+      .set("Cookie", adminCookie)
+      .expect(201);
+
+    const detailResponse = await request(app.getHttpServer())
+      .get(`/api/admin/submissions/${uploadResponse.body.id}`)
+      .set("Cookie", adminCookie)
+      .expect(200);
+
+    expect(detailResponse.body).toMatchObject({
+      submission: {
+        id: uploadResponse.body.id,
+        status: "approved",
+      },
+      order: {
+        id: uploadResponse.body.orderId,
+        status: "approved",
+        latestDecision: "approved",
+      },
+    });
+
+    const deliverResponse = await request(app.getHttpServer())
+      .post(`/api/admin/orders/${uploadResponse.body.orderId}/deliver`)
+      .set("Cookie", adminCookie)
+      .expect(201);
+
+    expect(deliverResponse.body).toMatchObject({
+      order: {
+        id: uploadResponse.body.orderId,
+        status: "delivered",
+        latestDecision: "approved",
+        history: [
+          { scope: "submission", status: "pending" },
+          { scope: "submission", status: "approved" },
+          { scope: "order", status: "delivered" },
+        ],
+      },
+    });
+
+    const trackingResponse = await request(app.getHttpServer())
+      .get(`/api/customer/orders/${uploadResponse.body.orderId}`)
+      .set("Cookie", customerCookie)
+      .expect(200);
+
+    expect(trackingResponse.body).toMatchObject({
+      id: uploadResponse.body.orderId,
+      status: "delivered",
+      latestDecision: "approved",
+      history: [
+        { scope: "submission", status: "pending" },
+        { scope: "submission", status: "approved" },
+        { scope: "order", status: "delivered" },
+      ],
+    });
+
+    await request(app.getHttpServer())
+      .get(`/api/customer/orders/${uploadResponse.body.orderId}`)
+      .set("Cookie", otherCustomerCookie)
+      .expect(404);
+  });
+
+  it("rejects delivery updates from non-admin users", async () => {
+    const customerCookie = await loginAs(
+      app,
+      "customer@example.com",
+      "password",
+    );
+    const adminCookie = await loginAs(app, "admin@example.com", "password");
+
+    const uploadResponse = await request(app.getHttpServer())
+      .post("/api/customer/submissions")
+      .set("Cookie", customerCookie)
+      .attach("file", Buffer.from("%PDF-1.4 upload%"), {
+        filename: "rx.pdf",
+        contentType: "application/pdf",
+      })
+      .expect(201);
+
+    await request(app.getHttpServer())
+      .post(`/api/admin/reviews/${uploadResponse.body.id}/approve`)
+      .set("Cookie", adminCookie)
+      .expect(201);
+
+    await request(app.getHttpServer())
+      .post(`/api/admin/orders/${uploadResponse.body.orderId}/deliver`)
+      .set("Cookie", customerCookie)
+      .expect(403);
   });
 });
 

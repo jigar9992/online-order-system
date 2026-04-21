@@ -23,6 +23,27 @@ function formatTimestamp(timestamp: string): string {
   return parsedDate.toLocaleString();
 }
 
+function findLatestRejectionReason(
+  summary: OrderSummary | null,
+): string | null {
+  if (!summary || summary.latestDecision !== "rejected") {
+    return null;
+  }
+
+  for (let index = summary.history.length - 1; index >= 0; index -= 1) {
+    const event = summary.history[index];
+    if (!event) {
+      continue;
+    }
+
+    if (event.scope === "submission" && event.status === "rejected") {
+      return event.reason;
+    }
+  }
+
+  return null;
+}
+
 export function TrackingPage() {
   const [orderId, setOrderId] = useState("");
   const [summary, setSummary] = useState<OrderSummary | null>(null);
@@ -47,11 +68,7 @@ export function TrackingPage() {
     };
   }, [previewUrl]);
 
-  const latestEvent = summary?.history.at(-1) ?? null;
-  const latestRejectionReason =
-    summary?.latestDecision === "rejected"
-      ? (latestEvent?.reason ?? null)
-      : null;
+  const latestRejectionReason = findLatestRejectionReason(summary);
 
   async function loadTracking(targetOrderId: string) {
     setIsLoading(true);
@@ -214,7 +231,11 @@ export function TrackingPage() {
                       key={`${event.submissionId}-${event.createdAt}-${index}`}
                     >
                       <strong>{event.status}</strong>
-                      <span>Submission {event.submissionId}</span>
+                      <span>
+                        {event.scope === "order"
+                          ? "Order milestone"
+                          : `Submission ${event.submissionId ?? "unknown"}`}
+                      </span>
                       <span>{formatTimestamp(event.createdAt)}</span>
                       {event.reason ? (
                         <span>Reason: {event.reason}</span>

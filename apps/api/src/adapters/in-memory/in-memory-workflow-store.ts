@@ -3,7 +3,6 @@ import type {
   FileKind,
   OrderSummary,
   PrescriptionSubmission,
-  SubmissionStatus,
   UserRole,
 } from "@online-order-system/types";
 import { randomUUID } from "node:crypto";
@@ -17,8 +16,8 @@ import {
   assertOrderStatusTransition,
   assertSubmissionStatusTransition,
   type OrderRecord,
-  type ReviewEvent,
   type SubmissionFile,
+  type WorkflowEvent,
 } from "../../domain/order-workflow.js";
 
 type UserRecord = {
@@ -47,7 +46,7 @@ export class InMemoryWorkflowStore implements WorkflowStore {
 
   private readonly files = new Map<string, FileRecord>();
 
-  private readonly events: ReviewEvent[] = [];
+  private readonly events: WorkflowEvent[] = [];
 
   seed(): void {
     this.users.clear();
@@ -125,6 +124,7 @@ export class InMemoryWorkflowStore implements WorkflowStore {
     this.events.push({
       submissionId: submission.id,
       orderId: order.id,
+      scope: "submission",
       status: "pending",
       actorId: input.customerId,
       reason: null,
@@ -160,6 +160,7 @@ export class InMemoryWorkflowStore implements WorkflowStore {
       .filter((event) => event.orderId === orderId)
       .map((event) => ({
         submissionId: event.submissionId,
+        scope: event.scope,
         status: event.status,
         actorId: event.actorId,
         reason: event.reason,
@@ -228,9 +229,10 @@ export class InMemoryWorkflowStore implements WorkflowStore {
     this.submissions.set(updatedSubmission.id, updatedSubmission);
     this.orders.set(updatedOrder.id, updatedOrder);
 
-    const event: ReviewEvent = {
+    const event: WorkflowEvent = {
       submissionId: updatedSubmission.id,
       orderId: updatedOrder.id,
+      scope: "submission",
       status: "approved",
       actorId: input.actor.actorId,
       reason: null,
@@ -273,9 +275,10 @@ export class InMemoryWorkflowStore implements WorkflowStore {
 
     this.submissions.set(updatedSubmission.id, updatedSubmission);
 
-    const event: ReviewEvent = {
+    const event: WorkflowEvent = {
       submissionId: updatedSubmission.id,
       orderId: order.id,
+      scope: "submission",
       status: "rejected",
       actorId: input.actor.actorId,
       reason,
@@ -335,6 +338,7 @@ export class InMemoryWorkflowStore implements WorkflowStore {
     this.events.push({
       submissionId: submission.id,
       orderId: updatedOrder.id,
+      scope: "submission",
       status: "pending",
       actorId: input.customerId,
       reason: null,
@@ -358,11 +362,12 @@ export class InMemoryWorkflowStore implements WorkflowStore {
     };
     this.orders.set(updatedOrder.id, updatedOrder);
     this.events.push({
-      submissionId: order.latestSubmissionId ?? "",
+      submissionId: null,
       orderId: order.id,
-      status: "approved" as SubmissionStatus,
+      scope: "order",
+      status: "delivered",
       actorId,
-      reason: "delivery update",
+      reason: null,
       createdAt: updatedOrder.updatedAt,
     });
     return updatedOrder;
