@@ -17,7 +17,8 @@ import {
 
 export function UploadPage() {
   const navigate = useNavigate();
-  const { flashMessage, clearFlashMessage } = useRouteFlashMessage();
+  const { flashMessage, flashOrderId, clearFlashMessage } =
+    useRouteFlashMessage();
   const [file, setFile] = useState<File | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -79,7 +80,7 @@ export function UploadPage() {
     setErrorMessage(null);
 
     try {
-      await apiPost<FormData, PrescriptionSubmission>(
+      const submission = await apiPost<FormData, PrescriptionSubmission>(
         "/customer/submissions",
         formData,
       );
@@ -87,7 +88,9 @@ export function UploadPage() {
       setErrorMessage(null);
       navigate("/customer/upload", {
         replace: true,
-        state: buildRouteFlashState("Prescription uploaded successfully."),
+        state: buildRouteFlashState("Prescription uploaded successfully.", {
+          orderId: submission.orderId,
+        }),
       });
     } catch (error) {
       if (error instanceof ApiError) {
@@ -110,9 +113,15 @@ export function UploadPage() {
       </p>
       <form className="stack" onSubmit={handleSubmit}>
         {flashMessage ? (
-          <p className="notice success" role="status">
-            {flashMessage}
-          </p>
+          <div className="notice success" role="status">
+            <p>{flashMessage}</p>
+            {flashOrderId ? (
+              <p>
+                Order reference: <code>{flashOrderId}</code>. Keep this for
+                tracking.
+              </p>
+            ) : null}
+          </div>
         ) : null}
         <label className="field">
           <span>Select file</span>

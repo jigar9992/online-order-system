@@ -43,7 +43,10 @@ function createSubmissionResponse(): PrescriptionSubmission {
 function renderPage(
   initialEntry:
     | string
-    | { pathname: string; state?: { flashMessage?: string } | null } = {
+    | {
+        pathname: string;
+        state?: { flashMessage?: string; orderId?: string } | null;
+      } = {
     pathname: "/customer/upload",
   },
 ) {
@@ -158,9 +161,12 @@ describe("UploadPage", () => {
     expect(await screen.findByRole("status")).toHaveTextContent(
       /prescription uploaded successfully/i,
     );
+    expect(screen.getByRole("status")).toHaveTextContent(
+      /order reference:\s*order_456/i,
+    );
     expect(screen.getByText(/choose a file to preview it here/i)).toBeVisible();
     expect(screen.queryByText("prescription.png")).not.toBeInTheDocument();
-    expect(screen.queryByText("order_456")).not.toBeInTheDocument();
+    expect(screen.getByText("order_456")).toBeVisible();
   });
 
   it("shows an inline API failure without clearing the selected file", async () => {
