@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import type { PrescriptionSubmission } from "@online-order-system/types";
 import { Link } from "react-router-dom";
 import { ApiError, apiGet } from "../../lib/api/client.js";
+import { useRouteFlashMessage } from "../shared/route-flash.js";
 
 export function ReviewQueuePage() {
+  const { flashMessage } = useRouteFlashMessage();
   const [filterValue, setFilterValue] = useState("");
   const [pendingReviews, setPendingReviews] = useState<
     PrescriptionSubmission[]
@@ -75,6 +77,11 @@ export function ReviewQueuePage() {
         decisioning.
       </p>
       <div className="stack">
+        {flashMessage ? (
+          <p className="notice success" role="status">
+            {flashMessage}
+          </p>
+        ) : null}
         <label className="field">
           <span>Filter queue</span>
           <input

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import type { PrescriptionSubmission } from "@online-order-system/types";
+import { useNavigate } from "react-router-dom";
 import { ApiError, apiPost } from "../../lib/api/client.js";
 import {
   acceptedPrescriptionMimeTypes,
@@ -9,22 +10,16 @@ import {
   supportedPrescriptionFormatLabel,
   validatePrescriptionFile,
 } from "./upload-constraints.js";
-
-function formatSubmissionTimestamp(timestamp: string): string {
-  const parsedDate = new Date(timestamp);
-
-  if (Number.isNaN(parsedDate.getTime())) {
-    return timestamp;
-  }
-
-  return parsedDate.toLocaleString();
-}
+import {
+  buildRouteFlashState,
+  useRouteFlashMessage,
+} from "../shared/route-flash.js";
 
 export function UploadPage() {
+  const navigate = useNavigate();
+  const { flashMessage, clearFlashMessage } = useRouteFlashMessage();
   const [file, setFile] = useState<File | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [successSubmission, setSuccessSubmission] =
-    useState<PrescriptionSubmission | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const previewUrl = useMemo(
@@ -41,7 +36,7 @@ export function UploadPage() {
   }, [previewUrl]);
 
   function handleFileChange(selectedFile: File | null) {
-    setSuccessSubmission(null);
+    clearFlashMessage();
 
     if (!selectedFile) {
       setFile(null);
@@ -63,7 +58,7 @@ export function UploadPage() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setSuccessSubmission(null);
+    clearFlashMessage();
 
     if (!file) {
       setErrorMessage("Select a prescription file before submitting.");
@@ -84,11 +79,16 @@ export function UploadPage() {
     setErrorMessage(null);
 
     try {
-      const submission = await apiPost<FormData, PrescriptionSubmission>(
+      await apiPost<FormData, PrescriptionSubmission>(
         "/customer/submissions",
         formData,
       );
-      setSuccessSubmission(submission);
+      setFile(null);
+      setErrorMessage(null);
+      navigate("/customer/upload", {
+        replace: true,
+        state: buildRouteFlashState("Prescription uploaded successfully."),
+      });
     } catch (error) {
       if (error instanceof ApiError) {
         setErrorMessage(error.message);
@@ -109,6 +109,11 @@ export function UploadPage() {
         size: {formatFileSize(maxPrescriptionUploadSizeBytes)}.
       </p>
       <form className="stack" onSubmit={handleSubmit}>
+        {flashMessage ? (
+          <p className="notice success" role="status">
+            {flashMessage}
+          </p>
+        ) : null}
         <label className="field">
           <span>Select file</span>
           <input
@@ -162,25 +167,6 @@ export function UploadPage() {
           <p className="error" role="alert">
             {errorMessage}
           </p>
-        ) : null}
-        {successSubmission ? (
-          <div className="notice success" role="status">
-            <strong>Prescription uploaded successfully.</strong>
-            <div className="detail-grid">
-              <span>Order reference</span>
-              <span>{successSubmission.orderId}</span>
-              <span>Submission reference</span>
-              <span>{successSubmission.id}</span>
-              <span>File reference</span>
-              <span>{successSubmission.fileId}</span>
-              <span>Status</span>
-              <span>{successSubmission.status}</span>
-              <span>Received</span>
-              <span>
-                {formatSubmissionTimestamp(successSubmission.createdAt)}
-              </span>
-            </div>
-          </div>
         ) : null}
         <button type="submit" disabled={isSubmitting || !file}>
           {isSubmitting ? "Uploading..." : "Submit prescription"}

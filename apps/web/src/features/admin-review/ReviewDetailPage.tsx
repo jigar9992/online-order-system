@@ -4,13 +4,14 @@ import type {
   OrderSummary,
   PrescriptionSubmission,
 } from "@online-order-system/types";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   ApiError,
   apiGet,
   apiPost,
   buildApiUrl,
 } from "../../lib/api/client.js";
+import { buildRouteFlashState } from "../shared/route-flash.js";
 
 type DeliverOrderResponse = {
   order: OrderSummary;
@@ -18,6 +19,7 @@ type DeliverOrderResponse = {
 
 export function ReviewDetailPage() {
   const params = useParams();
+  const navigate = useNavigate();
   const submissionId = params.submissionId ?? null;
   const [submission, setSubmission] = useState<PrescriptionSubmission | null>(
     null,
@@ -96,14 +98,14 @@ export function ReviewDetailPage() {
     setActionMessage(null);
 
     try {
-      const response = await apiPost<
-        { reason: string } | undefined,
-        AdminSubmissionDetail
-      >(path, body);
-      setSubmission(response.submission);
-      setOrder(response.order);
-      setRejectionReason(response.submission.rejectionReason ?? "");
-      setActionMessage(successMessage);
+      await apiPost<{ reason: string } | undefined, AdminSubmissionDetail>(
+        path,
+        body,
+      );
+      navigate("/admin/reviews", {
+        replace: true,
+        state: buildRouteFlashState(successMessage),
+      });
     } catch (error) {
       if (error instanceof ApiError) {
         setErrorMessage(error.message);

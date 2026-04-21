@@ -4,7 +4,7 @@ import type {
   AdminSubmissionDetail,
   PrescriptionSubmission,
 } from "@online-order-system/types";
-import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ReviewDetailPage } from "./ReviewDetailPage.js";
 
@@ -27,6 +27,19 @@ vi.mock("../../lib/api/client.js", () => ({
   apiPost: (...args: unknown[]) => apiPostMock(...args),
 }));
 
+function ReviewQueueDestination() {
+  const location = useLocation();
+  const state = location.state as { flashMessage?: string } | null;
+
+  return (
+    <section>
+      <h1>Review queue destination</h1>
+      <p>{location.pathname}</p>
+      {state?.flashMessage ? <p>{state.flashMessage}</p> : null}
+    </section>
+  );
+}
+
 function renderPage() {
   return render(
     <MemoryRouter initialEntries={["/admin/reviews/sub_001"]}>
@@ -35,6 +48,7 @@ function renderPage() {
           path="/admin/reviews/:submissionId"
           element={<ReviewDetailPage />}
         />
+        <Route path="/admin/reviews" element={<ReviewQueueDestination />} />
       </Routes>
     </MemoryRouter>,
   );
@@ -117,13 +131,11 @@ describe("ReviewDetailPage", () => {
         undefined,
       );
     });
-    expect(await screen.findByRole("status")).toHaveTextContent(
-      /submission approved/i,
-    );
-    expect(screen.getByText("Order status")).toBeVisible();
     expect(
-      screen.getByRole("button", { name: /mark delivered/i }),
+      await screen.findByRole("heading", { name: /review queue destination/i }),
     ).toBeVisible();
+    expect(screen.getByText("/admin/reviews")).toBeVisible();
+    expect(screen.getByText("Submission approved.")).toBeVisible();
   });
 
   it("requires a rejection reason and updates the UI after rejection", async () => {
@@ -168,12 +180,10 @@ describe("ReviewDetailPage", () => {
         { reason: "Image is blurred." },
       );
     });
-    expect(await screen.findByRole("status")).toHaveTextContent(
-      /submission rejected/i,
-    );
     expect(
-      screen.getByText("Latest rejection reason: Image is blurred."),
+      await screen.findByRole("heading", { name: /review queue destination/i }),
     ).toBeVisible();
+    expect(screen.getByText("Submission rejected.")).toBeVisible();
   });
 
   it("marks an approved order as delivered from the same screen", async () => {

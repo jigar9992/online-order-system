@@ -1,6 +1,7 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { PrescriptionSubmission } from "@online-order-system/types";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { UploadPage } from "./UploadPage.js";
 import { maxPrescriptionUploadSizeBytes } from "./upload-constraints.js";
@@ -39,6 +40,22 @@ function createSubmissionResponse(): PrescriptionSubmission {
   };
 }
 
+function renderPage(
+  initialEntry:
+    | string
+    | { pathname: string; state?: { flashMessage?: string } | null } = {
+    pathname: "/customer/upload",
+  },
+) {
+  return render(
+    <MemoryRouter initialEntries={[initialEntry]}>
+      <Routes>
+        <Route path="/customer/upload" element={<UploadPage />} />
+      </Routes>
+    </MemoryRouter>,
+  );
+}
+
 describe("UploadPage", () => {
   beforeEach(() => {
     apiPostMock.mockReset();
@@ -59,7 +76,7 @@ describe("UploadPage", () => {
 
   it("renders a local preview for a supported image file", async () => {
     const user = userEvent.setup();
-    render(<UploadPage />);
+    renderPage();
 
     const file = new File(["image"], "prescription.png", { type: "image/png" });
 
@@ -76,7 +93,7 @@ describe("UploadPage", () => {
 
   it("shows an inline error for unsupported file types", async () => {
     const user = userEvent.setup({ applyAccept: false });
-    render(<UploadPage />);
+    renderPage();
 
     const file = new File(["notes"], "notes.txt", { type: "text/plain" });
 
@@ -92,7 +109,7 @@ describe("UploadPage", () => {
 
   it("blocks files larger than the shared upload limit", async () => {
     const user = userEvent.setup();
-    render(<UploadPage />);
+    renderPage();
 
     const file = new File(["image"], "large.png", { type: "image/png" });
     Object.defineProperty(file, "size", {
@@ -106,7 +123,7 @@ describe("UploadPage", () => {
     expect(apiPostMock).not.toHaveBeenCalled();
   });
 
-  it("submits FormData and shows returned references after a successful upload", async () => {
+  it("redirects back to upload with a success flash after a successful upload", async () => {
     const user = userEvent.setup();
     let resolveUpload: ((value: PrescriptionSubmission) => void) | undefined;
     apiPostMock.mockImplementation(
@@ -116,7 +133,7 @@ describe("UploadPage", () => {
         }),
     );
 
-    render(<UploadPage />);
+    renderPage();
 
     const file = new File(["image"], "prescription.png", { type: "image/png" });
 
@@ -138,12 +155,12 @@ describe("UploadPage", () => {
 
     resolveUpload?.(createSubmissionResponse());
 
-    expect(
-      await screen.findByText(/prescription uploaded successfully/i),
-    ).toBeVisible();
-    expect(screen.getByText("order_456")).toBeVisible();
-    expect(screen.getByText("submission_123")).toBeVisible();
-    expect(screen.getByText("file_123")).toBeVisible();
+    expect(await screen.findByRole("status")).toHaveTextContent(
+      /prescription uploaded successfully/i,
+    );
+    expect(screen.getByText(/choose a file to preview it here/i)).toBeVisible();
+    expect(screen.queryByText("prescription.png")).not.toBeInTheDocument();
+    expect(screen.queryByText("order_456")).not.toBeInTheDocument();
   });
 
   it("shows an inline API failure without clearing the selected file", async () => {
@@ -153,7 +170,7 @@ describe("UploadPage", () => {
       new ApiError(500, "Upload failed on server."),
     );
 
-    render(<UploadPage />);
+    renderPage();
 
     const file = new File(["image"], "prescription.png", { type: "image/png" });
 
