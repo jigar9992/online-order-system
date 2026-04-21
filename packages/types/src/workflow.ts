@@ -6,6 +6,9 @@ export type SubmissionStatus = (typeof submissionStatuses)[number];
 
 export const orderStatuses = ["pending", "approved", "delivered"] as const;
 export type OrderStatus = (typeof orderStatuses)[number];
+export const workflowHistoryScopes = ["submission", "order"] as const;
+export type WorkflowHistoryScope = (typeof workflowHistoryScopes)[number];
+export type WorkflowHistoryStatus = SubmissionStatus | OrderStatus;
 
 export type FileKind = "image" | "pdf";
 export const maxPrescriptionUploadSizeBytes = 5 * 1024 * 1024;
@@ -42,19 +45,27 @@ export type PrescriptionSubmission = {
   reviewedAt: string | null;
 };
 
+export type WorkflowHistoryEvent = {
+  submissionId: string | null;
+  scope: WorkflowHistoryScope;
+  status: WorkflowHistoryStatus;
+  actorId: string;
+  reason: string | null;
+  createdAt: string;
+};
+
 export type OrderSummary = {
   id: string;
   customerId: string;
   status: OrderStatus;
   latestSubmissionId: string | null;
   latestDecision: SubmissionStatus | null;
-  history: Array<{
-    submissionId: string;
-    status: SubmissionStatus;
-    actorId: string;
-    reason: string | null;
-    createdAt: string;
-  }>;
+  history: WorkflowHistoryEvent[];
+};
+
+export type AdminSubmissionDetail = {
+  submission: PrescriptionSubmission;
+  order: OrderSummary;
 };
 
 export type CreateSubmissionRequest = {

@@ -4,7 +4,10 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
-import type { PrescriptionSubmission } from "@online-order-system/types";
+import type {
+  AdminSubmissionDetail,
+  PrescriptionSubmission,
+} from "@online-order-system/types";
 import { randomUUID } from "node:crypto";
 import { FILE_STORAGE, WORKFLOW_STORE } from "../../common/tokens.js";
 import type { FileStoragePort } from "../../ports/file-storage.port.js";
@@ -97,12 +100,17 @@ export class SubmissionsService {
     }
   }
 
-  async getById(submissionId: string) {
+  async getById(submissionId: string): Promise<AdminSubmissionDetail> {
     const submission = await this.workflowStore.getSubmissionById(submissionId);
     if (!submission) {
       throw new NotFoundException("Submission not found");
     }
 
-    return submission;
+    const order = await this.workflowStore.getOrderSummary(submission.orderId);
+    if (!order) {
+      throw new NotFoundException("Order not found");
+    }
+
+    return { submission, order };
   }
 }

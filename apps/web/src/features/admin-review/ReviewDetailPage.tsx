@@ -1,5 +1,9 @@
 import { useEffect, useState } from "react";
-import type { PrescriptionSubmission } from "@online-order-system/types";
+import type {
+  AdminSubmissionDetail,
+  OrderSummary,
+  PrescriptionSubmission,
+} from "@online-order-system/types";
 import { Link, useParams } from "react-router-dom";
 import {
   ApiError,
@@ -8,8 +12,8 @@ import {
   buildApiUrl,
 } from "../../lib/api/client.js";
 
-type ReviewActionResponse = {
-  submission: PrescriptionSubmission;
+type DeliverOrderResponse = {
+  order: OrderSummary;
 };
 
 export function ReviewDetailPage() {
@@ -18,6 +22,7 @@ export function ReviewDetailPage() {
   const [submission, setSubmission] = useState<PrescriptionSubmission | null>(
     null,
   );
+  const [order, setOrder] = useState<OrderSummary | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
@@ -37,15 +42,16 @@ export function ReviewDetailPage() {
       setActionMessage(null);
 
       try {
-        const response = await apiGet<PrescriptionSubmission>(
+        const response = await apiGet<AdminSubmissionDetail>(
           `/admin/submissions/${submissionId}`,
         );
         if (!isActive) {
           return;
         }
 
-        setSubmission(response);
-        setRejectionReason(response.rejectionReason ?? "");
+        setSubmission(response.submission);
+        setOrder(response.order);
+        setRejectionReason(response.submission.rejectionReason ?? "");
       } catch (error) {
         if (!isActive) {
           return;
@@ -74,6 +80,7 @@ export function ReviewDetailPage() {
     ? buildApiUrl(`/files/${submission.fileId}`)
     : null;
   const canReview = submission?.status === "pending";
+  const canDeliver = order?.status === "approved";
 
   async function submitDecision(
     path: string,
@@ -91,9 +98,10 @@ export function ReviewDetailPage() {
     try {
       const response = await apiPost<
         { reason: string } | undefined,
-        ReviewActionResponse
+        AdminSubmissionDetail
       >(path, body);
       setSubmission(response.submission);
+      setOrder(response.order);
       setRejectionReason(response.submission.rejectionReason ?? "");
       setActionMessage(successMessage);
     } catch (error) {
@@ -101,6 +109,32 @@ export function ReviewDetailPage() {
         setErrorMessage(error.message);
       } else {
         setErrorMessage("Review action failed. Try again.");
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  async function deliverOrder() {
+    if (!order) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    setErrorMessage(null);
+    setActionMessage(null);
+
+    try {
+      const response = await apiPost<undefined, DeliverOrderResponse>(
+        `/admin/orders/${order.id}/deliver`,
+      );
+      setOrder(response.order);
+      setActionMessage("Order marked as delivered.");
+    } catch (error) {
+      if (error instanceof ApiError) {
+        setErrorMessage(error.message);
+      } else {
+        setErrorMessage("Delivery update failed. Try again.");
       }
     } finally {
       setIsSubmitting(false);
@@ -140,6 +174,10 @@ export function ReviewDetailPage() {
               <div className="detail-grid">
                 <span>Order</span>
                 <span>{submission.orderId}</span>
+                <span>Order status</span>
+                <span>{order?.status ?? "unknown"}</span>
+                <span>Latest review outcome</span>
+                <span>{order?.latestDecision ?? "No review yet"}</span>
                 <span>Customer</span>
                 <span>{submission.customerId}</span>
                 <span>Status</span>
@@ -217,6 +255,18 @@ export function ReviewDetailPage() {
               >
                 Reject
               </button>
+              {canDeliver ? (
+                <button
+                  type="button"
+                  className="secondary"
+                  disabled={isSubmitting}
+                  onClick={() => {
+                    void deliverOrder();
+                  }}
+                >
+                  Mark delivered
+                </button>
+              ) : null}
               <Link to="/admin/reviews">Back to queue</Link>
             </div>
           </>

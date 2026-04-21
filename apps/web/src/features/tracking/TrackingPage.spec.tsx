@@ -39,6 +39,7 @@ function createOrderSummary(overrides?: Partial<OrderSummary>): OrderSummary {
     history: [
       {
         submissionId: "sub_001",
+        scope: "submission",
         status: "pending",
         actorId: "user_customer",
         reason: null,
@@ -46,6 +47,7 @@ function createOrderSummary(overrides?: Partial<OrderSummary>): OrderSummary {
       },
       {
         submissionId: "sub_001",
+        scope: "submission",
         status: "rejected",
         actorId: "user_admin",
         reason: "Please upload a clearer image.",
@@ -120,6 +122,7 @@ describe("TrackingPage", () => {
             ...createOrderSummary().history,
             {
               submissionId: "sub_002",
+              scope: "submission",
               status: "pending",
               actorId: "user_customer",
               reason: null,
@@ -158,5 +161,50 @@ describe("TrackingPage", () => {
     );
     expect(screen.getByText("Submission sub_002")).toBeVisible();
     expect(apiGetMock).toHaveBeenLastCalledWith("/customer/orders/order_123");
+  });
+
+  it("renders order-level delivery milestones alongside submission history", async () => {
+    const user = userEvent.setup();
+    apiGetMock.mockResolvedValue(
+      createOrderSummary({
+        status: "delivered",
+        latestDecision: "approved",
+        history: [
+          {
+            submissionId: "sub_001",
+            scope: "submission",
+            status: "pending",
+            actorId: "user_customer",
+            reason: null,
+            createdAt: "2026-04-21T10:00:00.000Z",
+          },
+          {
+            submissionId: "sub_001",
+            scope: "submission",
+            status: "approved",
+            actorId: "user_admin",
+            reason: null,
+            createdAt: "2026-04-21T10:30:00.000Z",
+          },
+          {
+            submissionId: null,
+            scope: "order",
+            status: "delivered",
+            actorId: "user_admin",
+            reason: null,
+            createdAt: "2026-04-21T12:00:00.000Z",
+          },
+        ],
+      }),
+    );
+
+    render(<TrackingPage />);
+
+    await user.type(screen.getByLabelText(/order reference/i), "order_123");
+    await user.click(screen.getByRole("button", { name: /load tracking/i }));
+
+    expect(await screen.findByText("Order order_123")).toBeVisible();
+    expect(screen.getByText("Order status")).toBeVisible();
+    expect(screen.getByText("Order milestone")).toBeVisible();
   });
 });

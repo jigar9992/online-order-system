@@ -2,7 +2,7 @@
 
 ## 1. Purpose
 
-Provide the basic operational checks for local development and MVP validation.
+Provide the local setup, validation, and workflow checks for the current MVP.
 
 ## 2. Environment Setup
 
@@ -13,7 +13,6 @@ Provide the basic operational checks for local development and MVP validation.
 - Phase 1 does not require a database connection or schema bootstrap; workflow state is stored in memory by default
 - confirm the upload directory is writable
 - install dependencies with `corepack pnpm install`
-- if `pnpm` is not available in PATH, use `corepack pnpm` directly
 
 ## 3. Workspace Commands
 
@@ -37,7 +36,7 @@ When `corepack pnpm dev` is running:
 - Customer upload page: `http://localhost:5173/customer/upload`
 - Customer tracking page: `http://localhost:5173/customer/tracking`
 - Admin review queue: `http://localhost:5173/admin/reviews`
-- API health/bootstrap check: `http://localhost:3000/api/auth/me`
+- API auth check: `http://localhost:3000/api/auth/me`
 - Frontend API base URL defaults to `http://localhost:3000/api`; override with `VITE_API_BASE_URL` if needed
 
 ## 5. Getting Started
@@ -45,21 +44,27 @@ When `corepack pnpm dev` is running:
 1. install dependencies with `corepack pnpm install`
 2. start the workspace with `corepack pnpm dev`
 3. build all workspace packages with `corepack pnpm build`
-4. run `corepack pnpm validate` before committing changes
-5. use `corepack pnpm fix` to auto-format and auto-fix lint issues
+4. run the full validation set before handoff:
+   - `corepack pnpm lint`
+   - `corepack pnpm typecheck`
+   - `corepack pnpm test`
+   - `corepack pnpm build`
+   - `corepack pnpm format:check`
 
 ## 6. Local Development Workflow
 
 1. start the backend service
 2. start the frontend application
 3. sign in as a customer
-   - phase 1 seeded user: `customer@example.com` / `password`
+   - seeded user: `customer@example.com` / `password`
 4. upload a valid prescription file
-5. sign in as admin
-   - phase 1 seeded user: `admin@example.com` / `password`
-6. approve or reject the submission
-7. verify the API reflects the review outcome and history
-8. treat resubmission and tracking UI checks as in-progress work until the placeholder screens are replaced with live API wiring
+5. copy the returned order reference from the confirmation panel
+6. sign in as admin
+   - seeded user: `admin@example.com` / `password`
+7. review the submission and approve or reject it
+8. if rejected, sign back in as the customer and resubmit from tracking
+9. if approved, sign back in as admin and mark the order delivered
+10. confirm the customer tracking page shows the final delivered milestone
 
 ## 7. Validation Checks
 
@@ -72,32 +77,32 @@ When `corepack pnpm dev` is running:
 ### Workflow checks
 
 - new uploads start in `pending`
-- admin can approve or reject only pending items
-- rejected items expose a rejection reason
-- resubmission is intended to reopen the workflow as `pending`, but the replacement-file path still needs end-to-end hardening
-- tracking, resubmission, and file access must enforce customer ownership server-side
+- admin can approve or reject only pending submissions
+- rejected items require and expose a rejection reason
+- resubmission is allowed only after rejection
+- only approved orders can be marked delivered
+- tracking history preserves both submission review events and order milestones
+- tracking, resubmission, and file access enforce customer ownership server-side
 
 ### Persistence checks
 
-- initial upload bytes are stored outside the workflow state store and can be fetched back through the file endpoint
+- upload bytes are stored outside the workflow state store and can be fetched through the file endpoint
 - submission history remains available after resubmission
-- status history is preserved
-- PostgreSQL remains a later-phase adapter behind the same business workflow boundary
+- delivery updates remain visible through order history
+- PostgreSQL remains a later-phase adapter behind the same workflow boundary
 
 ## 8. Common Fixes / Issues Resolved
 
-- Turbo could not resolve the pnpm binary in this shell, so root commands now use `corepack pnpm` recursion instead of `turbo run`.
-- `pnpm` was not exposed in PATH initially; Corepack was used to install and run pnpm consistently.
-- Vite's config loading on Windows triggered `spawn EPERM` while bundling the config file; the web app now builds with the default Vite config.
-- ESLint was scanning generated `dist` output until the shared ignore list was expanded to exclude build artifacts.
-- Recursive pnpm forwarding of `--fix` caused argument parsing problems; package-local `lint:fix` scripts now call ESLint directly.
-- The shared `types` package now owns the workflow DTOs and helpers directly instead of proxying through the older contracts folder.
-- `corepack pnpm test` is currently green, but some shared packages still use placeholder test scripts, so a green workspace run is not full feature coverage.
+- Root commands use `corepack pnpm` recursion instead of `turbo run` for stability in this Windows shell.
+- Vite’s config loading on Windows previously triggered `spawn EPERM`; the repo now builds with the stable default setup.
+- ESLint ignores generated build output.
+- The shared `types` package owns the workflow DTOs and helpers directly.
+- Shared packages still contain placeholder scripts where functionality has not been implemented yet; feature coverage currently lives in `apps/web` and `apps/api`.
 
 ## 9. Troubleshooting
 
 - If upload fails, verify file type, file size, and storage permissions.
 - If admin review is unavailable, verify the user has admin privileges.
-- If tracking shows stale data, verify the latest submission was persisted and the tracking query is reading the correct order reference.
-- If resubmission appears to succeed but the replacement file cannot be previewed later, verify the file-storage path and resubmission persistence flow rather than the UI first.
-- If persistence behaves differently across environments, verify repository mappings and workflow state handling rather than the UI.
+- If delivery cannot be triggered, verify the latest review outcome is `approved`.
+- If tracking shows stale data, verify the order reference and the latest workflow event persisted in the store.
+- If file preview fails after resubmission, verify the file-storage path and file-access authorization rather than the UI first.

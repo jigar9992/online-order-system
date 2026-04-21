@@ -1,6 +1,9 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import type { PrescriptionSubmission } from "@online-order-system/types";
+import type {
+  AdminSubmissionDetail,
+  PrescriptionSubmission,
+} from "@online-order-system/types";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ReviewDetailPage } from "./ReviewDetailPage.js";
@@ -55,6 +58,23 @@ function createSubmission(
   };
 }
 
+function createDetailResponse(
+  overrides?: Partial<AdminSubmissionDetail>,
+): AdminSubmissionDetail {
+  return {
+    submission: createSubmission(),
+    order: {
+      id: "order_001",
+      customerId: "user_customer",
+      status: "pending",
+      latestSubmissionId: "sub_001",
+      latestDecision: "pending",
+      history: [],
+    },
+    ...overrides,
+  };
+}
+
 describe("ReviewDetailPage", () => {
   beforeEach(() => {
     apiGetMock.mockReset();
@@ -63,13 +83,23 @@ describe("ReviewDetailPage", () => {
 
   it("loads submission detail and approves a pending submission", async () => {
     const user = userEvent.setup();
-    apiGetMock.mockResolvedValue(createSubmission());
-    apiPostMock.mockResolvedValue({
-      submission: createSubmission({
-        status: "approved",
-        reviewedAt: "2026-04-21T11:00:00.000Z",
+    apiGetMock.mockResolvedValue(createDetailResponse());
+    apiPostMock.mockResolvedValue(
+      createDetailResponse({
+        submission: createSubmission({
+          status: "approved",
+          reviewedAt: "2026-04-21T11:00:00.000Z",
+        }),
+        order: {
+          id: "order_001",
+          customerId: "user_customer",
+          status: "approved",
+          latestSubmissionId: "sub_001",
+          latestDecision: "approved",
+          history: [],
+        },
       }),
-    });
+    );
 
     renderPage();
 
@@ -90,19 +120,32 @@ describe("ReviewDetailPage", () => {
     expect(await screen.findByRole("status")).toHaveTextContent(
       /submission approved/i,
     );
-    expect(screen.getByText("approved")).toBeVisible();
+    expect(screen.getByText("Order status")).toBeVisible();
+    expect(
+      screen.getByRole("button", { name: /mark delivered/i }),
+    ).toBeVisible();
   });
 
   it("requires a rejection reason and updates the UI after rejection", async () => {
     const user = userEvent.setup();
-    apiGetMock.mockResolvedValue(createSubmission());
-    apiPostMock.mockResolvedValue({
-      submission: createSubmission({
-        status: "rejected",
-        rejectionReason: "Image is blurred.",
-        reviewedAt: "2026-04-21T11:15:00.000Z",
+    apiGetMock.mockResolvedValue(createDetailResponse());
+    apiPostMock.mockResolvedValue(
+      createDetailResponse({
+        submission: createSubmission({
+          status: "rejected",
+          rejectionReason: "Image is blurred.",
+          reviewedAt: "2026-04-21T11:15:00.000Z",
+        }),
+        order: {
+          id: "order_001",
+          customerId: "user_customer",
+          status: "pending",
+          latestSubmissionId: "sub_001",
+          latestDecision: "rejected",
+          history: [],
+        },
       }),
-    });
+    );
 
     renderPage();
 
@@ -131,5 +174,70 @@ describe("ReviewDetailPage", () => {
     expect(
       screen.getByText("Latest rejection reason: Image is blurred."),
     ).toBeVisible();
+  });
+
+  it("marks an approved order as delivered from the same screen", async () => {
+    const user = userEvent.setup();
+    apiGetMock.mockResolvedValue(
+      createDetailResponse({
+        submission: createSubmission({
+          status: "approved",
+          reviewedAt: "2026-04-21T11:00:00.000Z",
+        }),
+        order: {
+          id: "order_001",
+          customerId: "user_customer",
+          status: "approved",
+          latestSubmissionId: "sub_001",
+          latestDecision: "approved",
+          history: [],
+        },
+      }),
+    );
+    apiPostMock.mockResolvedValue({
+      order: {
+        id: "order_001",
+        customerId: "user_customer",
+        status: "delivered",
+        latestSubmissionId: "sub_001",
+        latestDecision: "approved",
+        history: [
+          {
+            submissionId: "sub_001",
+            scope: "submission",
+            status: "approved",
+            actorId: "user_admin",
+            reason: null,
+            createdAt: "2026-04-21T11:00:00.000Z",
+          },
+          {
+            submissionId: null,
+            scope: "order",
+            status: "delivered",
+            actorId: "user_admin",
+            reason: null,
+            createdAt: "2026-04-21T12:00:00.000Z",
+          },
+        ],
+      },
+    });
+
+    renderPage();
+
+    await screen.findByText("rx-proof.png");
+    await user.click(screen.getByRole("button", { name: /mark delivered/i }));
+
+    await waitFor(() => {
+      expect(apiPostMock).toHaveBeenCalledWith(
+        "/admin/orders/order_001/deliver",
+      );
+    });
+    expect(await screen.findByRole("status")).toHaveTextContent(
+      /order marked as delivered/i,
+    );
+    expect(screen.getByText("delivered")).toBeVisible();
+    expect(
+      screen.queryByRole("button", { name: /mark delivered/i }),
+    ).not.toBeInTheDocument();
   });
 });
